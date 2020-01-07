@@ -1,0 +1,168 @@
+<resources>
+    <string name="app_name">FastTrack</string>
+    <string name="app_title">FastTrack Example</string>
+
+    <string name="default_notification_channel_id">default</string>
+
+    <string name="toast_exit">Press Back again to Exit.</string>
+    <string name="tab_title_provision">Provision</string>
+    <string name="tab_title_authentication">Authentication</string>
+    <string name="tab_title_transaction">Sign transaction</string>
+    <string name="tab_title_protector">Protector</string>
+    <string name="tab_title_messenger">Messenger</string>
+    <string name="tab_title_msp_frame">MSP Frame Reader</string>
+    <string name="tab_title_settings">Settings</string>
+
+
+    // Push
+
+    <string name="PUSH_APPROVE_QUESTION">Incoming message</string>
+    <string name="PUSH_APPROVE_QUESTION_APPROVE">Approve</string>
+    <string name="PUSH_APPROVE_QUESTION_DENY">Deny</string>
+    <string name="PUSH_SENT">Request was successfully sent.</string>
+    <string name="PUSH_STATUS_REGISTERED">Ready to receive notification:</string>
+    <string name="PUSH_STATUS_PENDING">Registration in progress:</string>
+    <string name="PUSH_PROCESSING">Processing…</string>
+    <string name="PUSH_FCM_CHANNEL_NAME">MSP Frame Channel</string>
+    <string name="PUSH_FCM_CHANNEL_DESCRIPTION">MSP Frame Communication Channel</string>
+
+    // Common messages
+
+    <string name="COMMON_MESSAGE_OK">OK</string>
+    <string name="COMMON_MESSAGE_SUCCESS">Success</string>
+    <string name="COMMON_MESSAGE_ERROR_CAPTION">Something went wrong.</string>
+    <string name="COMMON_MSG_NO_CLIENT_ID">No client id is registered.</string>
+    <string name="COMMON_MSG_MISSING_CLIENT_ID">Missing Client Id.</string>
+    <string name="COMMON_MSG_NO_PUSH_TOKEN">Missing push token.</string>
+    <string name="COMMON_MSG_UNSUPORTED_FRAME">Unsupported frame type.</string>
+    <string name="COMMON_MSG_WRONG_COMPONENTS">Unexpected components count.</string>
+    <string name="COMMON_MSG_WRONG_FRAME">Failed to parse frame.</string>
+
+    // Auth mode options
+
+    <string name="AUTH_MODE_TOUCH_ID_ENABLE">Enable TouchID</string>
+    <string name="AUTH_MODE_TOUCH_ID_DISABLE">Disable TouchID</string>
+    <string name="AUTH_MODE_FACE_ID_ENABLE">Enable FaceID</string>
+    <string name="AUTH_MODE_FACE_ID_DISABLE">Disable FaceID</string>
+
+    // Loading bar indicator
+
+    <string name="LOADING_MESSAGE_SENDING">Sending...</string>
+    <string name="LOADING_MESSAGE_SCANNING">Scanning</string>
+    <string name="LOADING_MESSAGE_REMOVING">Removing</string>
+    <string name="LOADING_MESSAGE_PROCESSING">Processing</string>
+    <string name="LOADING_MESSAGE_INIT">Initialising</string>
+
+
+    // OTP
+
+    <string name="OTP_VALUE_CAPTION">OTP</string>
+    <string name="OTP_VALUE_DESCRIPTION_VALID">\n%s\n\nOTP is valid for next %ds.</string>
+
+    // Designer
+
+    <string name="ui_label_domain">Domain:</string>
+    <string name="ui_label_enroll_with_qr">Enroll with QR Code</string>
+    <string name="ui_label_enroll_manually">Enroll Manually</string>
+    <string name="ui_label_user_id">User ID:</string>
+    <string name="ui_label_registration_code">Registration Code:</string>
+    <string name="ui_label_out_of_band">Out of Band</string>
+    <string name="ui_label_out_of_band_ready">✔️</string>
+    <string name="ui_label_in_band">In Band</string>
+    <string name="ui_label_generate_otp">Generate an OTP using</string>
+    <string name="ui_label_confirm_transaction">Confirm Transaction using</string>
+    <string name="ui_label_generic_info">Generic info</string>
+    <string name="ui_label_credentials">Credentials</string>
+    <string name="ui_label_pin">Pin:</string>
+    <string name="ui_label_token">Token:</string>
+    <string name="ui_label_status">Status:</string>
+    <string name="ui_label_generate_otp_alone">Generate OTP</string>
+    <string name="ui_label_verify_finger">Verify fingerprint to continue</string>
+    <string name="ui_label_touch_sensor">Touch sensor</string>
+    <string name="ui_label_msp_frame_scanner">MSP Frame Scanner</string>
+
+    <string name="ui_button_scan_and_enroll">Scan and enroll</string>
+    <string name="ui_button_enroll">Enroll</string>
+    <string name="ui_button_otp_pin">Pin</string>
+    <string name="ui_button_otp_face_id">Face Id</string>
+    <string name="ui_button_otp_touch_id">Touch Id</string>
+    <string name="ui_button_change_pin">Change PIN</string>
+    <string name="ui_button_privacy_policy">Privacy &amp; Policy</string>
+    <string name="ui_button_delete_token">Delete Token</string>
+    <string name="ui_button_use_pin">USE PIN</string>
+    <string name="ui_button_cancel">CANCEL</string>
+    <string name="ui_button_msp_transfer">Money Transfer</string>
+    <string name="ui_button_msp_atm">ATM</string>
+    <string name="ui_label_offline_token">Offline Token</string>
+    <string name="ui_label_login_using">Login using</string>
+    <string name="ui_label_offline">Offline</string>
+    <string name="ui_label_amount">Amount (in USD):</string>
+    <string name="ui_label_beneficiary">Beneficiary:</string>
+    <string name="ui_label_failed_attempts">Failed attempts:</string>
+    <string name="ui_dialog_acknowledge_message">Do you want to acknowledge this message ?</string>
+    <string name="ui_dialog_transaction_message">Do you want to accept this message ?</string>
+    <string name="ui_dialog_transaction_signing_enter_pin">Please enter the pin</string>
+    <string name="ui_dialog_yes">Yes</string>
+    <string name="ui_dialog_no">No</string>
+    <string name="ui_dialog_accept">Accept</string>
+    <string name="ui_dialog_reject">Reject</string>
+    <string name="ui_dialog_ok">Ok</string>
+    <string name="ui_dialog_cancel">Cancel</string>
+
+    // Server Messages
+
+    <string name="message_subject_authentication">Please authenticate to login to the tutorial site.</string>
+    <string name="message_subject_transaction">Please approve the transaction of $%amount to %beneficiary</string>
+    <string name="message_not_found">Missing translation.</string>
+
+    // Missing permissions
+
+    <string name="ui_label_permissions_caption">Missing permission</string>
+    <string name="ui_label_permissions_description">Please make sure, that non permission is permanently blocked in the settings.</string>
+    <string name="ui_button_permissions">Ask for permissions</string>
+
+    // OTP
+
+    <string name="default_font" translatable="false">sans-serif-light</string>
+    <string name="txt_otp_type">Otp Type</string>
+    <string name="txt_registration_code_hint">Registration code</string>
+    <string name="txt_input_token_name_hint">Click on "List TokenDevice" button to get token device names</string>
+    <string name="txt_provision">Provision</string>
+    <string name="txt_get_otp_by_pin">Get OTP by PIN</string>
+    <string name="txt_change_pin">Change PIN</string>
+    <string name="txt_activate_biofingerprint">Activate BioFingerprint</string>
+    <string name="txt_deactivate_biofingerprint">Deactivate BioFingerprint</string>
+    <string name="txt_get_otp_by_biofingerprint">Get OTP by BioFingerprint</string>
+    <string name="txt_remove_token_device">Remove TokenDevice</string>
+    <string name="radio_cap">CAP</string>
+    <string name="radio_oath_totp">OATH TOTP</string>
+    <string name="radio_oath_ocra">OATH OCRA</string>
+    <string name="txt_list_token_devices">List TokenDevice</string>
+    <string name="txt_input_token_name">Input Token Name</string>
+    <string name="token_device">Current TokenDevice</string>
+    <string name="spinner_title">TokenSpinner</string>
+    <string name="enter_pin_to_get_otp">Enter PIN to get OTP</string>
+    <string name="enter_pin_to_activate_biofingerprint">Enter PIN to Activate BioFingerprint</string>
+
+    <string name="please_provide_your_pin">Please provide your PIN</string>
+    <string name="txt_verify_code_hint_label">Enter the Verify Code &#8230;</string>
+    <string name="txt_raw_pin_enter_pin_hint_label">Enter the PIN &#8230;</string>
+    <string name="txt_raw_pin_enter_old_pin_hint_label">Enter old PIN &#8230;</string>
+    <string name="txt_raw_pin_enter_new_pin_hint_label">Enter new PIN &#8230;</string>
+    <string name="txt_raw_pin_enter_confirm_pin_hint_label">Enter confirm PIN &#8230;</string>
+
+    // OOB
+
+    <string name="txt_register">Register</string>
+    <string name="txt_unregister">Unregister</string>
+    <string name="txt_fetch_message">Fetch Message</string>
+    <string name="txt_sign_message">Sign Message</string>
+    <string name="txt_verify_message">Verify Message</string>
+    <string name="txt_message_type">Message Type</string>
+    <string name="radio_generic_message">Generic</string>
+    <string name="radio_verification_message">Verification</string>
+    <string name="radio_signing_message">Signing</string>
+    <string name="tooltip_message_type">Choose one of the message type below</string>
+
+
+</resources>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="5dp">
+
+    <TextView
+        android:paddingTop="15dp"
+        android:id="@+id/fingerprint_title"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:paddingLeft="15dp"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:text="Generate OTP"/>
+
+    <TextView
+        android:paddingTop="10dp"
+        android:layout_below="@id/fingerprint_title"
+        android:id="@+id/secondary_text"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:paddingLeft="15dp"
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray"
+        android:text="Verify fingerprint to continue"/>
+
+    <LinearLayout
+        android:id="@+id/fingerprint_icon_panel"
+        android:layout_below="@id/secondary_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:paddingTop="20dp"
+        android:layout_gravity="center_horizontal">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingRight="20dp"
+            android:src="@drawable/ic_fp_40px"/>
+
+        <TextView
+            android:paddingTop="10dp"
+            android:id="@+id/fingerprint_prompt"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:paddingLeft="15dp"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:text="Touch sensor"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/buttonPanel"
+        android:layout_below="@id/fingerprint_icon_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:paddingTop="15dp"
+        android:paddingBottom="5dp"
+        android:gravity="bottom">
+
+        <Button
+            android:id="@+id/cancel_button"
+            android:layout_weight="0.5"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="Cancel"
+            android:textColor="#117864"
+            android:background="@android:color/transparent"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

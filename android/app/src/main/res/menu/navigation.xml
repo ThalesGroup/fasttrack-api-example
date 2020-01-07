@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_protector"
+        android:icon="@drawable/outline_lock_black_24"
+        android:title="@string/tab_title_protector" />
+
+    <item
+        android:id="@+id/navigation_messenger"
+        android:icon="@drawable/ic_menu_start_conversation"
+        android:title="@string/tab_title_messenger" />
+
+</menu>

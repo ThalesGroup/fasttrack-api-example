@@ -1,0 +1,63 @@
+apply plugin: 'com.android.application'
+
+project.ext {
+    distDir = "$projectDir/../../../../"
+}
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.2"
+    defaultConfig {
+        applicationId "com.gemalto.idp.mobile.fasttrack.example"
+        minSdkVersion 19
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            // Make sure it point to proguard-project.pro from Mobile Protector delivery as it contains specific configuration
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), "$distDir/proguard-project.pro", 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled true
+            // Make sure it point to proguard-project.pro from Mobile Protector delivery as it contains specific configuration
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), "$distDir/proguard-project.pro", 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs += ['libs']
+        }
+
+        debug {
+            jniLibs.srcDirs += "$distDir/debug"
+        }
+
+        release {
+            jniLibs.srcDirs += "$distDir/release"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+}
+
+dependencies {
+    debugImplementation files("$distDir/debug/libidpmobile.jar")
+    debugImplementation files("$distDir/fasttrack/debug/fasttrack.jar")
+
+    releaseImplementation files("$distDir/release/libidpmobile.jar")
+    releaseImplementation files("$distDir/fasttrack/release/fasttrack.jar")
+
+    implementation 'net.java.dev.jna:jna:4.5.0'
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'com.google.android.material:material:1.0.0'
+    
+}

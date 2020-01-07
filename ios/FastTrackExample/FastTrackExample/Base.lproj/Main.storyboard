@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="gJd-Sz-Gci">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Tab Bar Controller-->
+        <scene sceneID="sMp-Th-uvP">
+            <objects>
+                <tabBarController id="gJd-Sz-Gci" sceneMemberID="viewController">
+                    <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="ZTj-gE-55q">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="49"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </tabBar>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="GhC-pB-ey4"/>
+                        <segue destination="xsF-Sy-64I" kind="relationship" relationship="viewControllers" id="SEe-Hg-vVf"/>
+                    </connections>
+                </tabBarController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="pFb-Nc-FtE" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-3681" y="-789"/>
+        </scene>
+        <!--Protector-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ProtectorViewController" customModule="FastTrackExample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="6jX-j2-Whs">
+                                <rect key="frame" x="10" y="10" width="355" height="81"/>
+                                <subviews>
+                                    <segmentedControl opaque="NO" contentMode="scaleToFill" selected="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="bordered" selectedSegmentIndex="0" springLoaded="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vrP-6Y-uLz">
+                                        <rect key="frame" x="0.0" y="0.0" width="355" height="32"/>
+                                        <segments>
+                                            <segment title="First"/>
+                                            <segment title="Second"/>
+                                        </segments>
+                                        <connections>
+                                            <action selector="onChangeOtpType:" destination="BYZ-38-t0r" eventType="valueChanged" id="McN-M2-qF4"/>
+                                        </connections>
+                                    </segmentedControl>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="Y9P-HG-XI9">
+                                        <rect key="frame" x="0.0" y="47" width="355" height="34"/>
+                                        <subviews>
+                                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="249" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Registration Code" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="SRv-Ue-ZQc">
+                                                <rect key="frame" x="0.0" y="0.0" width="172.5" height="34"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                                <textInputTraits key="textInputTraits"/>
+                                            </textField>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="LcY-Ji-L87" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                                <rect key="frame" x="182.5" y="0.0" width="172.5" height="34"/>
+                                                <state key="normal" title="Provision"/>
+                                                <connections>
+                                                    <action selector="onClickProvision:" destination="BYZ-38-t0r" eventType="touchUpInside" id="yTh-He-JO6"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                            </stackView>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="15" translatesAutoresizingMaskIntoConstraints="NO" id="TRQ-o3-weI">
+                                <rect key="frame" x="10" y="111" width="355" height="200"/>
+                                <subviews>
+                                    <pickerView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="KyI-J5-gFR">
+                                        <rect key="frame" x="0.0" y="0.0" width="355" height="100"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="100" id="9HH-ph-RpJ"/>
+                                        </constraints>
+                                    </pickerView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="UeI-Me-ov5">
+                                        <rect key="frame" x="0.0" y="115" width="355" height="30"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pWn-m7-bjs" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                                <rect key="frame" x="0.0" y="0.0" width="175" height="30"/>
+                                                <state key="normal" title="OTP with PIN"/>
+                                                <connections>
+                                                    <action selector="onClickOtpWithPin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="iCY-ie-M3Y"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ADR-Ye-lTI" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                                <rect key="frame" x="180" y="0.0" width="175" height="30"/>
+                                                <state key="normal" title="Change PIN"/>
+                                                <connections>
+                                                    <action selector="onClickChangePin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="CT9-C5-2ev"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="p4u-k9-Pgk">
+                                        <rect key="frame" x="0.0" y="160" width="355" height="40"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="wordWrap" translatesAutoresizingMaskIntoConstraints="NO" id="NLK-is-W8l" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                                <rect key="frame" x="0.0" y="0.0" width="115" height="40"/>
+                                                <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
+                                                <state key="normal" title="Activate SystemBiometric"/>
+                                                <connections>
+                                                    <action selector="onClickActivateSystemBiometric:" destination="BYZ-38-t0r" eventType="touchUpInside" id="IEy-v6-Zyp"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="wordWrap" translatesAutoresizingMaskIntoConstraints="NO" id="6Wo-3E-dMG" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                                <rect key="frame" x="120" y="0.0" width="115" height="40"/>
+                                                <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
+                                                <state key="normal" title="OTP with SystemBiometric"/>
+                                                <connections>
+                                                    <action selector="onClickOtpWithSystemBiometric:" destination="BYZ-38-t0r" eventType="touchUpInside" id="62g-Vl-xyB"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="wordWrap" translatesAutoresizingMaskIntoConstraints="NO" id="bTa-rD-Uh8" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                                <rect key="frame" x="240" y="0.0" width="115" height="40"/>
+                                                <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
+                                                <state key="normal" title="Deactivate SystemBiometric"/>
+                                                <connections>
+                                                    <action selector="onClickDeactivateSystemBiometric:" destination="BYZ-38-t0r" eventType="touchUpInside" id="B4p-yz-cxC"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="40" id="Dda-4p-dC7"/>
+                                        </constraints>
+                                    </stackView>
+                                </subviews>
+                            </stackView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" usesAttributedText="YES" translatesAutoresizingMaskIntoConstraints="NO" id="w1o-18-KMj">
+                                <rect key="frame" x="10" y="326" width="355" height="190"/>
+                                <color key="backgroundColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <attributedString key="attributedText"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                <dataDetectorType key="dataDetectorTypes" link="YES"/>
+                            </textView>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="YPh-sX-OkP">
+                                <rect key="frame" x="10" y="535" width="355" height="68"/>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cim-nP-DRo" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="0.0" width="355" height="30"/>
+                                        <state key="normal" title="List Token Devices"/>
+                                        <connections>
+                                            <action selector="onClickListTokenDevices:" destination="BYZ-38-t0r" eventType="touchUpInside" id="y7b-ho-3Xp"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Now-e4-vFE" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="38" width="355" height="30"/>
+                                        <state key="normal" title="Delete Token Devices"/>
+                                        <connections>
+                                            <action selector="onClickDeleteTokenDevices:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Re7-It-0mT"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                            </stackView>
+                        </subviews>
+                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="w1o-18-KMj" secondAttribute="trailing" constant="10" id="A67-zI-Arg"/>
+                            <constraint firstItem="TRQ-o3-weI" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="AhV-C2-jiG"/>
+                            <constraint firstItem="6jX-j2-Whs" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="HS8-63-kNH"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="TRQ-o3-weI" secondAttribute="trailing" constant="10" id="L3e-Mf-css"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="YPh-sX-OkP" secondAttribute="trailing" constant="10" id="Odv-64-Avg"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="6jX-j2-Whs" secondAttribute="trailing" constant="10" id="Q88-Un-k3w"/>
+                            <constraint firstItem="YPh-sX-OkP" firstAttribute="top" secondItem="w1o-18-KMj" secondAttribute="bottom" constant="19" id="Trd-Zh-Nk1"/>
+                            <constraint firstItem="w1o-18-KMj" firstAttribute="top" secondItem="TRQ-o3-weI" secondAttribute="bottom" constant="15" id="Ve1-AY-wDX"/>
+                            <constraint firstItem="6jX-j2-Whs" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="ZZ4-Z8-5kg"/>
+                            <constraint firstItem="TRQ-o3-weI" firstAttribute="top" secondItem="6jX-j2-Whs" secondAttribute="bottom" constant="20" id="cfe-nc-3lz"/>
+                            <constraint firstItem="YPh-sX-OkP" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" constant="-15" id="jVX-7F-xiH"/>
+                            <constraint firstItem="YPh-sX-OkP" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="rLE-60-Ltj"/>
+                            <constraint firstItem="w1o-18-KMj" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="wnz-fK-Kcg"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Protector" id="5fW-ca-6no"/>
+                    <navigationItem key="navigationItem" id="ROf-Bz-i3C"/>
+                    <connections>
+                        <outlet property="buttonActivateSystemBiometric" destination="NLK-is-W8l" id="ce3-u6-4sd"/>
+                        <outlet property="buttonChangePin" destination="ADR-Ye-lTI" id="uf3-Wq-xye"/>
+                        <outlet property="buttonDeactiveBiomertic" destination="bTa-rD-Uh8" id="NtN-Qf-yuM"/>
+                        <outlet property="buttonOtpWithPin" destination="pWn-m7-bjs" id="eIG-ZK-66W"/>
+                        <outlet property="buttonOtpWithSystemBiometric" destination="6Wo-3E-dMG" id="slu-S6-Rhj"/>
+                        <outlet property="buttonProvision" destination="LcY-Ji-L87" id="KK2-NN-3pW"/>
+                        <outlet property="pickerViewTokenDevice" destination="KyI-J5-gFR" id="v67-ve-Ljr"/>
+                        <outlet property="segmentControlOtpType" destination="vrP-6Y-uLz" id="lID-nZ-9N7"/>
+                        <outlet property="textFieldRegCode" destination="SRv-Ue-ZQc" id="QMU-IG-Ens"/>
+                        <outlet property="textViewLogger" destination="w1o-18-KMj" id="Sqe-JI-mFc"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-2802.4000000000001" y="-1050.224887556222"/>
+        </scene>
+        <!--Messenger-->
+        <scene sceneID="Lm5-MN-Mvc">
+            <objects>
+                <viewController id="xsF-Sy-64I" customClass="MessengerViewController" customModule="FastTrackExample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="1YD-sz-zr8">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillProportionally" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="WMh-lK-LVQ">
+                                <rect key="frame" x="10" y="10" width="355" height="120"/>
+                                <subviews>
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="249" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="bezel" placeholder="Registration Code" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="yOq-WV-4UN">
+                                        <rect key="frame" x="0.0" y="0.0" width="355" height="39.5"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                <integer key="value" value="8"/>
+                                            </userDefinedRuntimeAttribute>
+                                        </userDefinedRuntimeAttributes>
+                                    </textField>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="CN9-yd-F3x">
+                                        <rect key="frame" x="0.0" y="44.5" width="355" height="35"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hKI-pI-kkG" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                                <rect key="frame" x="0.0" y="0.0" width="175" height="35"/>
+                                                <state key="normal" title="Register"/>
+                                                <connections>
+                                                    <action selector="onClickRegister:" destination="xsF-Sy-64I" eventType="touchUpInside" id="f6d-JH-x0m"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4qz-KF-yKW" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                                <rect key="frame" x="180" y="0.0" width="175" height="35"/>
+                                                <state key="normal" title="Unregister"/>
+                                                <connections>
+                                                    <action selector="onClickUnregister:" destination="xsF-Sy-64I" eventType="touchUpInside" id="pmN-e7-Fhk"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="wordWrap" translatesAutoresizingMaskIntoConstraints="NO" id="BHz-Jm-iOc" customClass="DefaultCustomButton" customModule="FastTrackExample" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="84.5" width="355" height="35.5"/>
+                                        <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="14"/>
+                                        <state key="normal" title="Fetch Message"/>
+                                        <connections>
+                                            <action selector="onClickFetchMessage:" destination="xsF-Sy-64I" eventType="touchUpInside" id="Eap-9K-YQI"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="120" id="LlT-zi-YlE"/>
+                                </constraints>
+                            </stackView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" usesAttributedText="YES" translatesAutoresizingMaskIntoConstraints="NO" id="34K-N1-luv">
+                                <rect key="frame" x="10" y="195" width="355" height="413"/>
+                                <color key="backgroundColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <attributedString key="attributedText">
+                                    <fragment>
+                                        <string key="content">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
+                                        <attributes>
+                                            <color key="NSColor" red="0.0" green="0.98106676339999999" blue="0.57369142770000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                            <font key="NSFont" size="14" name="CourierNewPSMT"/>
+                                            <paragraphStyle key="NSParagraphStyle" alignment="left" lineBreakMode="wordWrapping" baseWritingDirection="natural" tighteningFactorForTruncation="0.0"/>
+                                        </attributes>
+                                    </fragment>
+                                </attributedString>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                <dataDetectorType key="dataDetectorTypes" link="YES"/>
+                            </textView>
+                        </subviews>
+                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="z75-f0-VXh" firstAttribute="trailing" secondItem="34K-N1-luv" secondAttribute="trailing" constant="10" id="D8U-JP-ZWN"/>
+                            <constraint firstItem="z75-f0-VXh" firstAttribute="bottom" secondItem="34K-N1-luv" secondAttribute="bottom" constant="10" id="cI6-Hf-QhW"/>
+                            <constraint firstItem="WMh-lK-LVQ" firstAttribute="leading" secondItem="z75-f0-VXh" secondAttribute="leading" constant="10" id="dNF-RS-j9X"/>
+                            <constraint firstItem="z75-f0-VXh" firstAttribute="trailing" secondItem="WMh-lK-LVQ" secondAttribute="trailing" constant="10" id="ezP-FG-UO4"/>
+                            <constraint firstItem="34K-N1-luv" firstAttribute="leading" secondItem="z75-f0-VXh" secondAttribute="leading" constant="10" id="heF-zp-tqV"/>
+                            <constraint firstItem="34K-N1-luv" firstAttribute="top" secondItem="WMh-lK-LVQ" secondAttribute="bottom" constant="65" id="tM6-tm-LIQ"/>
+                            <constraint firstItem="WMh-lK-LVQ" firstAttribute="top" secondItem="z75-f0-VXh" secondAttribute="top" constant="10" id="w8L-b7-ENZ"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="z75-f0-VXh"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Messenger" id="2ZY-Si-FEL"/>
+                    <navigationItem key="navigationItem" id="XAX-Xy-Ecy"/>
+                    <connections>
+                        <outlet property="fetchMessageButton" destination="BHz-Jm-iOc" id="bYi-6G-ryP"/>
+                        <outlet property="logTextView" destination="34K-N1-luv" id="ohH-Dg-Skg"/>
+                        <outlet property="registerButton" destination="hKI-pI-kkG" id="97G-L5-gWG"/>
+                        <outlet property="registrationCodeTextField" destination="yOq-WV-4UN" id="StN-6T-kcL"/>
+                        <outlet property="unregisterButton" destination="4qz-KF-yKW" id="Jya-OC-JZC"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Zhh-Kv-wzY" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-2802.4000000000001" y="-316.19190404797604"/>
+        </scene>
+    </scenes>
+</document>
