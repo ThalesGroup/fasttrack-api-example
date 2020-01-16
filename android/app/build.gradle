@@ -49,10 +49,10 @@ android {
 
 dependencies {
     debugImplementation files("$distDir/debug/libidpmobile.jar")
-    debugImplementation files("$distDir/fasttrack/debug/fasttrack.jar")
+    debugImplementation files("$distDir/fasttrack/debug/libidpmobilefasttrack.jar")
 
     releaseImplementation files("$distDir/release/libidpmobile.jar")
-    releaseImplementation files("$distDir/fasttrack/release/fasttrack.jar")
+    releaseImplementation files("$distDir/fasttrack/release/libidpmobilefasttrack.jar")
 
     implementation 'net.java.dev.jna:jna:4.5.0'
 

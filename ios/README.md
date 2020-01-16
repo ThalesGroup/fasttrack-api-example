@@ -36,8 +36,8 @@ The application demonstrates the following FastTrack features:
 In Xcode:
 
 * File -> Open -> FastTrackExample.xcodeproj
-* Add the FastTrack.framework path in the project's “Framework Search Paths” list.
-* Add the FastTrack.framework in the project's "Link Binary with Libraries" list.
+* Add the EzioMobileFastTrack.framework path in the project's “Framework Search Paths” list.
+* Add the EzioMobileFastTrack.framework in the project's "Link Binary with Libraries" list.
 * Add the EzioMobile.framework path in the project's “Framework Search Paths” list.
 * Add the EzioMobile.framework in the project's "Link Binary with Libraries" list.
 

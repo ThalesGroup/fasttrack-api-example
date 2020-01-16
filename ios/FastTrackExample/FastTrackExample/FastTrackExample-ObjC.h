@@ -26,6 +26,6 @@ HIGH RISK ACTIVITIES.
 #ifndef bridge_header_h
 #define bridge_header_h
 
-#import <FastTrack/FastTrack.h>
+#import <EzioMobileFastTrack/EzioMobileFastTrack.h>
 
 #endif /* bridge_header_h */

@@ -21,7 +21,7 @@
 		C99DF4CA237417B100EB18AD /* ProtectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C99DF4C9237417B100EB18AD /* ProtectorViewController.swift */; };
 		C9B5A76E2387BF1500953322 /* UIUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B5A76D2387BF1500953322 /* UIUtil.swift */; };
 		C9C4245B238269EB00248066 /* FastTrackExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C4245A238269EB00248066 /* FastTrackExample.swift */; };
-		C9EDE0C5237E9CE3009D52BF /* FastTrack.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9EDE0C4237E9CE3009D52BF /* FastTrack.framework */; };
+		C9EDE0C5237E9CE3009D52BF /* EzioMobileFastTrack.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9EDE0C4237E9CE3009D52BF /* EzioMobileFastTrack.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,7 +42,7 @@
 		C9B5A76D2387BF1500953322 /* UIUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIUtil.swift; sourceTree = "<group>"; };
 		C9C4245A238269EB00248066 /* FastTrackExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastTrackExample.swift; sourceTree = "<group>"; };
 		C9EDE0C0237E7226009D52BF /* ProtectorConfigurations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProtectorConfigurations.swift; path = FastTrackExample/Protector/ProtectorConfigurations.swift; sourceTree = SOURCE_ROOT; };
-		C9EDE0C4237E9CE3009D52BF /* FastTrack.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FastTrack.framework; path = ../../../../dist/ios/fasttrack/Debug/FastTrack.framework; sourceTree = "<group>"; };
+		C9EDE0C4237E9CE3009D52BF /* EzioMobileFastTrack.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EzioMobileFastTrack.framework; path = ../../../../dist/ios/fasttrack/Debug/EzioMobileFastTrack.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,7 +52,7 @@
 			files = (
 				C945EC0A237E551C00165FF7 /* libc++.tbd in Frameworks */,
 				C945EC08237E4BB600165FF7 /* EzioMobile.framework in Frameworks */,
-				C9EDE0C5237E9CE3009D52BF /* FastTrack.framework in Frameworks */,
+				C9EDE0C5237E9CE3009D52BF /* EzioMobileFastTrack.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,7 +71,7 @@
 		C945EBFF237E3E9900165FF7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C9EDE0C4237E9CE3009D52BF /* FastTrack.framework */,
+				C9EDE0C4237E9CE3009D52BF /* EzioMobileFastTrack.framework */,
 				C945EC09237E551C00165FF7 /* libc++.tbd */,
 				C945EC07237E4BB600165FF7 /* EzioMobile.framework */,
 			);
