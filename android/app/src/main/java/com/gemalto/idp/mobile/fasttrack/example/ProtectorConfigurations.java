@@ -74,7 +74,7 @@ public class ProtectorConfigurations {
 
     /**
      * Replace this byte array with your own EPS key modulus unless you are
-     * using the EPS 2.X default key pair.
+     * using the EPS default key pair.
      * <p>
      * The EPS' RSA modulus. This is specific to the configuration of the
      * bank's system.  Therefore other values should be used here.
