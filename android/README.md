@@ -46,20 +46,6 @@ The application demonstrates the following features:
 
   **Note**: the 'Debug' version of the library should be used in case TLS is configured to allow insecure connection (http), hostname mismatch or self-signed certificate.
 
-* Include the `libjnidispatch.so` shared library for all the Android ABIs that your project supports.
-  * Navigate to [JNA libraries](https://github.com/java-native-access/jna/releases).
-  * Under Version 4.5.0, download the zip archive
-  * Unzip the package, navigate to `jna-4.5.0/dist/` directory. `libjnidispatch.so` for different ABIs can be extracted from respective jar file. The mapping is as below illustrated in below table.
-
-    | JNA ABI             | Android ABI   |
-    | ------------------- | ------------- |
-    | android-aarch64.jar | arm64-v8a     |
-    | android-armv7.jar   | armeabi-v7a   |
-    | android-x86-64.jar  | x86_64        |
-    | android-x86.jar     | x86           |
-
-  * Put the `libjnidispatch.so` into the mapped Android ABI folder, for example, `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64`.
-
 ## Open the example project
 
 * Launch Android Studio

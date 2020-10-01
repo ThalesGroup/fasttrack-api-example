@@ -1,9 +1,11 @@
 package com.gemalto.idp.mobile.fasttrack.example.fragments;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.text.InputFilter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,9 +24,12 @@ import com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations;
 import com.gemalto.idp.mobile.fasttrack.example.R;
 import com.gemalto.idp.mobile.fasttrack.example.Utils;
 import com.gemalto.idp.mobile.fasttrack.protector.BioFingerprintAuthenticationCallbacks;
+import com.gemalto.idp.mobile.fasttrack.protector.BiometricAuthenticationCallbacks;
 import com.gemalto.idp.mobile.fasttrack.protector.BioFingerprintAuthenticationStatus;
+import com.gemalto.idp.mobile.fasttrack.protector.BiometricAuthenticationStatus;
 import com.gemalto.idp.mobile.fasttrack.protector.MobileProtector;
 import com.gemalto.idp.mobile.fasttrack.protector.ProtectorAuthInput;
+import com.gemalto.idp.mobile.fasttrack.protector.TokenDevice;
 import com.gemalto.idp.mobile.fasttrack.protector.cap.CapMobileProtector;
 import com.gemalto.idp.mobile.fasttrack.protector.cap.CapSettings;
 import com.gemalto.idp.mobile.fasttrack.protector.cap.CapTokenDevice;
@@ -70,9 +75,9 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
     private Button mProvisionButton;
     private Button mGetOtpPinButton;
     private Button mChangePinButton;
-    private Button mActivateBioFingerprintBtn;
-    private Button mDeactivateBioFingerprintBtn;
-    private Button mGetOtpBioFingerprintBtn;
+    private Button mActivateBiometricBtn;
+    private Button mDeactivateBiometricBtn;
+    private Button mGetOtpBiomericBtn;
     private Button mRemoveTokenDevice;
     private Button mListTokenDevice;
     private TextView mLogTextView;
@@ -152,9 +157,9 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         mProvisionButton = retValue.findViewById(R.id.provision);
         mGetOtpPinButton = retValue.findViewById(R.id.getOtpByPin);
         mChangePinButton = retValue.findViewById(R.id.changePin);
-        mActivateBioFingerprintBtn = retValue.findViewById(R.id.activateBioFingerprint);
-        mDeactivateBioFingerprintBtn = retValue.findViewById(R.id.deactivateBioFingerprint);
-        mGetOtpBioFingerprintBtn = retValue.findViewById(R.id.getOtpByBioFingerprint);
+        mActivateBiometricBtn = retValue.findViewById(R.id.activateBiometric);
+        mDeactivateBiometricBtn = retValue.findViewById(R.id.deactivateBiometric);
+        mGetOtpBiomericBtn = retValue.findViewById(R.id.getOtpByBiometric);
         mRemoveTokenDevice = retValue.findViewById(R.id.removeTokenDevice);
         mListTokenDevice = retValue.findViewById(R.id.listTokenDevices);
         mLogTextView = retValue.findViewById(R.id.log);
@@ -259,22 +264,22 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
             displayPinDialog(CHANGE_PIN);
         });
 
-        mActivateBioFingerprintBtn.setOnClickListener(v -> {
+        mActivateBiometricBtn.setOnClickListener(v -> {
             displayPinDialog(ACTIVATE_BIOFINGERPRINT);
         });
 
-        mDeactivateBioFingerprintBtn.setOnClickListener(v -> {
+        mDeactivateBiometricBtn.setOnClickListener(v -> {
             try {
-                deactivateBioFingerprint();
+                deactivateBiometric();
             } catch (FastTrackException e) {
                 // Print the error
                 mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
             }
         });
 
-        mGetOtpBioFingerprintBtn.setOnClickListener(v -> {
+        mGetOtpBiomericBtn.setOnClickListener(v -> {
             try {
-                promptBioFingerprint();
+                getOtpByBiometric();
             } catch (FastTrackException e) {
                 // Print the error
                 mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
@@ -545,7 +550,7 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
                                     break;
                                 case ACTIVATE_BIOFINGERPRINT:
                                     try {
-                                        activateBioFingerprint();
+                                        activateBiometric();
                                     } catch (FastTrackException e) {
                                         // Print the error
                                         mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
@@ -730,7 +735,7 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
     }
     //endregion
 
-    //region Activate BioFingerprint
+    //region Activate Biometric
 
     /**
      * To activate Biometric Authentication:
@@ -739,7 +744,7 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
      * 3 Make sure the PIN provided is correct by Authenticating to the Server
      * 4 Call activate API by providing PIN value
      */
-    private void activateBioFingerprint() throws FastTrackException {
+    private void activateBiometric() throws FastTrackException {
 
         String currentTokenDevice = getCurrentTokenDevice();
         if (currentTokenDevice == null) {
@@ -747,53 +752,72 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
             return;
         }
 
-        mMyLogger.updateLogTitle(mLogTextView, "Activate BioFingerprint");
+        mMyLogger.updateLogTitle(mLogTextView, "Activate Biometric");
         switch (mCurentOtpType) {
             case OATH_TOTP:
             case OATH_OCRA:
                 OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
                 if (oathTokenDevice != null) {
-                    if (!mOathMobileProtector.isBioFingerprintModeSupported()) {
-                        mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint not supported on this device!");
-                    } else if (!mOathMobileProtector.isBioFingerprintModeConfigured()) {
-                        mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint not configured on this device!");
+                    if (!canAuthenticate(mOathMobileProtector)) {
+                        mMyLogger.updateLogMessage(mLogTextView, "Biometric not supported&configured on this device!");
                     } else {
-                        if (!oathTokenDevice.isBioFingerprintModeActivated()) {
-                            // Make sure the current PIN provided is correct by verifying the OTP value against the Server
-                            // before calling this API
-                            oathTokenDevice.activateBioFingerprintMode(mCurrentPin);
-                            mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint activated for token " + currentTokenDevice);
+                        if (!isBioModeActivated(oathTokenDevice)) {
+                            activeBioMode(oathTokenDevice, mCurrentPin);
+                            mMyLogger.updateLogMessage(mLogTextView, "Biometric activated for token " + currentTokenDevice);
                         } else {
-                            mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint already activated for token " + currentTokenDevice);
+                            mMyLogger.updateLogMessage(mLogTextView, "Biometric already activated for token " + currentTokenDevice);
                         }
-
                     }
                 }
                 break;
             case CAP:
                 CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
                 if (capTokenDevice != null) {
-                    if (!mCapMobileProtector.isBioFingerprintModeSupported()) {
-                        mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint not supported on this device!");
-                    } else if (!mCapMobileProtector.isBioFingerprintModeConfigured()) {
-                        mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint not configured on this device!");
+                    if (!canAuthenticate(mCapMobileProtector)) {
+                        mMyLogger.updateLogMessage(mLogTextView, "Biometric not supported&configured on this device!");
                     } else {
-                        if (!capTokenDevice.isBioFingerprintModeActivated()) {
-                            // Make sure the current PIN provided is correct by verifying the OTP value against the Server
-                            // before calling this API
-                            capTokenDevice.activateBioFingerprintMode(mCurrentPin);
-                            mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint activated for token " + currentTokenDevice);
+                        if (!isBioModeActivated(capTokenDevice)) {
+                            activeBioMode(capTokenDevice, mCurrentPin);
+                            mMyLogger.updateLogMessage(mLogTextView, "Biometric activated for token " + currentTokenDevice);
                         } else {
-                            mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint already activated for token " + currentTokenDevice);
+                            mMyLogger.updateLogMessage(mLogTextView, "Biometric already activated for token " + currentTokenDevice);
                         }
                     }
                 }
                 break;
         }
     }
+
+    private boolean canAuthenticate(MobileProtector mobileProtector) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return mobileProtector.isBioFingerprintModeSupported() && mobileProtector.isBioFingerprintModeConfigured();
+        } else {
+            if (mobileProtector.canBiometricAuthenticate() != 0) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    private boolean isBioModeActivated(TokenDevice tokenDevice) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return tokenDevice.isBioFingerprintModeActivated();
+        } else {
+            return tokenDevice.isBiometricModeActivated();
+        }
+    }
+
+    private void activeBioMode(TokenDevice tokenDevice, String pinToTest) throws FastTrackException {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            tokenDevice.activateBioFingerprintMode(pinToTest);
+        } else {
+            tokenDevice.activateBiometricMode(pinToTest);
+        }
+    }
     //endregion
 
-    //region Deactivate BioFingerprint
+    //region Deactivate Biometric
 
     /**
      * To activate Biometric Authentication:
@@ -801,44 +825,52 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
      * 2 Check if it has been activated previously
      * 3 Call de-activate API by providing PIN value
      */
-    private void deactivateBioFingerprint() throws FastTrackException {
+    private void deactivateBiometric() throws FastTrackException {
         String currentTokenDevice = getCurrentTokenDevice();
         if (currentTokenDevice == null) {
             mMyLogger.updateLogMessage(mLogTextView, "No TokenDevice selected.");
             return;
         }
 
-        mMyLogger.updateLogTitle(mLogTextView, "Deactivate BioFingerprint");
+        mMyLogger.updateLogTitle(mLogTextView, "Deactivate Biometric");
         switch (mCurentOtpType) {
             case OATH_TOTP:
             case OATH_OCRA:
                 OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
                 if (oathTokenDevice != null) {
-                    if (oathTokenDevice.isBioFingerprintModeActivated()) {
-                        oathTokenDevice.deActivateBioFingerprintMode();
-                        mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint authentication is deactivated for token device " + currentTokenDevice);
+                    if (isBioModeActivated(oathTokenDevice)) {
+                        deActiveBioMode(oathTokenDevice);
+                        mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is deactivated for token device " + currentTokenDevice);
                     } else {
-                        mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint authentication is not activated for token device " + currentTokenDevice);
+                        mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is not activated for token device " + currentTokenDevice);
                     }
                 }
                 break;
             case CAP:
                 CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
                 if (capTokenDevice != null) {
-                    if (capTokenDevice.isBioFingerprintModeActivated()) {
-                        capTokenDevice.deActivateBioFingerprintMode();
-                        mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint authentication is deactivated for token device " + currentTokenDevice);
+                    if (isBioModeActivated(capTokenDevice)) {
+                        deActiveBioMode(capTokenDevice);
+                        mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is deactivated for token device " + currentTokenDevice);
                     } else {
-                        mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint authentication is not activated for token device " + currentTokenDevice);
+                        mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is not activated for token device " + currentTokenDevice);
                     }
                 }
                 break;
         }
     }
 
+    private void deActiveBioMode(TokenDevice tokenDevice) throws FastTrackException {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            tokenDevice.deActivateBioFingerprintMode();
+        } else {
+            tokenDevice.deActivateBiometricMode();
+        }
+    }
+
     //endregion
 
-    //region Get OTPs - BioFingerprint
+    //region Get OTPs - Biometric
     /**
      * To perform OTP generation with Biometric Authentication:
      * 1 Prepare UI callback
@@ -854,14 +886,14 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         }
     };
 
-    private BioFingerprintAuthenticationCallbacks callbacks = new BioFingerprintAuthenticationCallbacks() {
+    private BioFingerprintAuthenticationCallbacks bioFpCallbacks = new BioFingerprintAuthenticationCallbacks() {
         @Override
         public void onSuccess(ProtectorAuthInput protectorAuthInput) {
             if (bioMetricFragment != null) {
                 bioMetricFragment.dismiss();
             }
             try {
-                getOtpUsingBioFingerprint(protectorAuthInput);
+                getOtpUsingBiometric(protectorAuthInput);
             } catch (FastTrackException e) {
                 // Print the error
                 mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
@@ -881,6 +913,7 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
                         && bioMetricFragment.getDialog().isShowing()) {
                     bioMetricFragment.getDialog().dismiss();
                 }
+                showPinFallbackDialog();
             } else {
                 bioMetricFragment.setPromptText(s);
             }
@@ -894,9 +927,32 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         }
     }
 
-    private void promptBioFingerprint() throws FastTrackException {
+    private BiometricAuthenticationCallbacks bioMpCallbacks = new com.gemalto.idp.mobile.fasttrack.protector.BiometricAuthenticationCallbacks() {
+        @Override
+        public void onSuccess(ProtectorAuthInput protectorAuthInput) {
+            Log.d("TAG_BIOMETRIC", "biometricAuthenticateFastTrack onSuccess");
+            try {
+                getOtpUsingBiometric(protectorAuthInput);
+            } catch (FastTrackException e) {
+                // Print the error
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+            }
+        }
 
-        mMyLogger.updateLogTitle(mLogTextView, "OTP using BioFingerprint");
+        @Override
+        public void onAuthenticationStatus(int i, String s) {
+            Log.d("TAG_BIOMETRIC", "status: " + i + " msg: " + s);
+            if (i == BiometricAuthenticationStatus.BIOMETRIC_CANCELED) {
+                showPinFallbackDialog();
+            } else {
+                mMyLogger.updateLogMessage(mLogTextView, s, false);
+            }
+        }
+    };
+
+    private void getOtpByBiometric() throws FastTrackException {
+
+        mMyLogger.updateLogTitle(mLogTextView, "OTP using Biometric");
 
         String currentTokenDevice = getCurrentTokenDevice();
         if (currentTokenDevice == null) {
@@ -904,51 +960,98 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
             return;
         }
 
+        final CancellationSignal cancellationSignal = new CancellationSignal();
         switch (mCurentOtpType) {
             case OATH_TOTP:
             case OATH_OCRA:
                 OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
-                if (oathTokenDevice.isBioFingerprintModeActivated()) {
-                    oathTokenDevice.authenticateWithBioFingerprint(mCancellationSignal, callbacks);
+                if (isBioModeActivated(oathTokenDevice)) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                        oathTokenDevice.authenticateWithBioFingerprint(mCancellationSignal, bioFpCallbacks);
+                    } else {
+                        oathTokenDevice.authenticateWithBiometric(
+                                "Test Biometric",
+                                "Login with biometrics",
+                                "Please use your biometric to verify your identity",
+                                "Cancel",
+                                cancellationSignal,
+                                bioMpCallbacks);
+                    }
                 } else {
-                    mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint authentication is not activated for token device " + currentTokenDevice);
+                    mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is not activated for token device " + currentTokenDevice);
                 }
                 break;
             case CAP:
                 CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
-                if (capTokenDevice.isBioFingerprintModeActivated()) {
-                    capTokenDevice.authenticateWithBioFingerprint(mCancellationSignal, callbacks);
-                } else {
-                    mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint authentication is not activated for token device " + currentTokenDevice);
+                if (isBioModeActivated(capTokenDevice)) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                        capTokenDevice.authenticateWithBioFingerprint(mCancellationSignal, bioFpCallbacks);
+                    } else {
+                        capTokenDevice.authenticateWithBiometric(
+                                "Test Biometric",
+                                "Login with biometrics",
+                                "Please use your biometric to verify your identity",
+                                "Cancel",
+                                cancellationSignal,
+                                bioMpCallbacks);
+                    }
+                }  else {
+                    mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is not activated for token device " + currentTokenDevice);
                 }
                 break;
         }
     }
 
-    private void getOtpUsingBioFingerprint(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
+    private void showPinFallbackDialog() {
+        LayoutInflater li = LayoutInflater.from(mActivity);
+        View promptsView = li.inflate(R.layout.pin_fallback_dialog, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mActivity);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        (dialog, id) -> {
+                            displayPinDialog(GET_OTP);
+                        })
+                .setNegativeButton("Cancel",
+                        (dialog, id) -> dialog.cancel());
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        // show it
+        alertDialog.show();
+
+    }
+
+    private void getOtpUsingBiometric(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
         switch (mCurentOtpType) {
             case OATH_TOTP:
-                generateOathTotpByBioFingerprint(protectorAuthInput);
+                generateOathTotpByBiometric(protectorAuthInput);
                 break;
             case OATH_OCRA:
-                generateOathOcraByBioFingerprint(protectorAuthInput);
+                generateOathOcraByBiometric(protectorAuthInput);
                 break;
             case CAP:
-                generateCapOtpByBioFingerprint(protectorAuthInput);
+                generateCapOtpByBiometric(protectorAuthInput);
                 break;
         }
     }
 
-    private void generateOathTotpByBioFingerprint(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
+    private void generateOathTotpByBiometric(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
         String currentTokenDevice = getCurrentTokenDevice();
         OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
 
         // OTP
         String otp = oathTokenDevice.getOtp(protectorAuthInput);
-        mMyLogger.updateLog(mLogTextView, "Get OTP BioFingerprint", "Token: " + currentTokenDevice + "\n" + "OTP: " + otp);
+        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric", "Token: " + currentTokenDevice + "\n" + "OTP: " + otp);
     }
 
-    private void generateOathOcraByBioFingerprint(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
+    private void generateOathOcraByBiometric(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
         String currentTokenDevice = getCurrentTokenDevice();
 
         OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
@@ -960,14 +1063,14 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         String session = "\u20ac" + "10"; // (Euro) E2 82 AC + 31 + 30
         byte[] passwordHash = oathTokenDevice.getOcraPasswordHash(password);
         String ocraOtp = oathTokenDevice.getOcraOtp(protectorAuthInput, serverChallenge, clientChallenge, passwordHash, session);
-        mMyLogger.updateLog(mLogTextView, "Get OTP BioFingerprint", "Token: " + currentTokenDevice + "\n" + "OCRA OTP: " + ocraOtp);
+        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric", "Token: " + currentTokenDevice + "\n" + "OCRA OTP: " + ocraOtp);
     }
 
-    private void generateCapOtpByBioFingerprint(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
+    private void generateCapOtpByBiometric(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
         String currentTokenDevice = getCurrentTokenDevice();
         CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
 
-        mMyLogger.updateLog(mLogTextView, "Get OTP BioFingerprint", "Current Token: " + currentTokenDevice);
+        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric", "Current Token: " + currentTokenDevice);
 
         initCapValue();
 

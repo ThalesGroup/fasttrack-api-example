@@ -152,27 +152,27 @@
                     android:orientation="horizontal">
 
                     <Button
-                        android:id="@+id/activateBioFingerprint"
+                        android:id="@+id/activateBiometric"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="0.50"
-                        android:text="@string/txt_activate_biofingerprint"
+                        android:text="@string/txt_activate_biometric"
                         android:textAllCaps="false" />
 
                     <Button
-                        android:id="@+id/deactivateBioFingerprint"
+                        android:id="@+id/deactivateBiometric"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="0.50"
-                        android:text="@string/txt_deactivate_biofingerprint"
+                        android:text="@string/txt_deactivate_biometric"
                         android:textAllCaps="false" />
                 </LinearLayout>
 
                 <Button
-                    android:id="@+id/getOtpByBioFingerprint"
+                    android:id="@+id/getOtpByBiometric"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/txt_get_otp_by_biofingerprint"
+                    android:text="@string/txt_get_otp_by_biometric"
                     android:textAllCaps="false" />
             </LinearLayout>
         </LinearLayout>

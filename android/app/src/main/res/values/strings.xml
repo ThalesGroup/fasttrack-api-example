@@ -130,9 +130,9 @@
     <string name="txt_provision">Provision</string>
     <string name="txt_get_otp_by_pin">Get OTP by PIN</string>
     <string name="txt_change_pin">Change PIN</string>
-    <string name="txt_activate_biofingerprint">Activate BioFingerprint</string>
-    <string name="txt_deactivate_biofingerprint">Deactivate BioFingerprint</string>
-    <string name="txt_get_otp_by_biofingerprint">Get OTP by BioFingerprint</string>
+    <string name="txt_activate_biometric">Activate Biometric</string>
+    <string name="txt_deactivate_biometric">Deactivate Biometric</string>
+    <string name="txt_get_otp_by_biometric">Get OTP by Biometric</string>
     <string name="txt_remove_token_device">Remove TokenDevice</string>
     <string name="radio_cap">CAP</string>
     <string name="radio_oath_totp">OATH TOTP</string>
@@ -142,7 +142,8 @@
     <string name="token_device">Current TokenDevice</string>
     <string name="spinner_title">TokenSpinner</string>
     <string name="enter_pin_to_get_otp">Enter PIN to get OTP</string>
-    <string name="enter_pin_to_activate_biofingerprint">Enter PIN to Activate BioFingerprint</string>
+    <string name="enter_pin_to_activate_biofingerprint">Enter PIN to Activate Biometric</string>
+    <string name="fallback_to_pin">Fallback to PIN</string>
 
     <string name="please_provide_your_pin">Please provide your PIN</string>
     <string name="txt_verify_code_hint_label">Enter the Verify Code &#8230;</string>

@@ -13,6 +13,10 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
+
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64', 'armeabi-v7a', 'x86'
+        }
     }
     buildTypes {
         release {
@@ -28,10 +32,6 @@ android {
     }
 
     sourceSets {
-        main {
-            jniLibs.srcDirs += ['libs']
-        }
-
         debug {
             jniLibs.srcDirs += "$distDir/debug"
         }
@@ -54,7 +54,8 @@ dependencies {
     releaseImplementation files("$distDir/release/libidpmobile.jar")
     releaseImplementation files("$distDir/fasttrack/release/libidpmobilefasttrack.jar")
 
-    implementation 'net.java.dev.jna:jna:4.5.0'
+    // JNA lib
+    implementation 'net.java.dev.jna:jna:5.5.0@aar'
 
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
