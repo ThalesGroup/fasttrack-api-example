@@ -45,6 +45,7 @@ class ProtectorViewController: UIViewController, UIPickerViewDelegate, UIPickerV
     var protectorExample: ProtectorExample?
     var indicator: UIActivityIndicatorView?
     var tokenDeviceNames: Array<String>? = [String]()
+    var isUseGSK: Bool = true
     
     var otpType: OtpType? = OtpType.TOTP {
         didSet {
@@ -93,7 +94,7 @@ class ProtectorViewController: UIViewController, UIPickerViewDelegate, UIPickerV
         for (index, otpType) in otpTypes.enumerated() {
             segmentControlOtpType.insertSegment(withTitle: otpType, at: index, animated: true)
         }
-        if segmentControlOtpType.selectedSegmentIndex == UISegmentedControlNoSegment {
+        if segmentControlOtpType.selectedSegmentIndex == UISegmentedControl.noSegment {
             segmentControlOtpType.selectedSegmentIndex = 0
             segmentControlOtpType.setNeedsLayout()
         }
@@ -125,7 +126,7 @@ class ProtectorViewController: UIViewController, UIPickerViewDelegate, UIPickerV
     
     func initActivityInidcator()
     {
-        indicator = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.gray)
+        indicator = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.gray)
         guard let indicator = indicator else {
             return
         }
@@ -138,7 +139,7 @@ class ProtectorViewController: UIViewController, UIPickerViewDelegate, UIPickerV
         
         indicator.layer.masksToBounds = false
         view.addSubview(indicator)
-        view.bringSubview(toFront: indicator)
+        view.bringSubviewToFront(indicator)
     }
     
     // MARK: Protector Operations
@@ -186,9 +187,17 @@ class ProtectorViewController: UIViewController, UIPickerViewDelegate, UIPickerV
         }
         
         let title : String = "Please enter the pin"
-        getUserInputPin(title: title) { (pin) in
-            let otp = self.protectorExample?.otp(pin)
-            MyLogger.updateLog(self.textViewLogger, title: "OTP Value", message: "\(otp ?? "nil")")
+        if isUseGSK {
+            shownPinPadPinInput { (pinInput) in
+                let protectorPinAuthInput = EMProtectorAuthInput.init(authInput: pinInput)
+                let otp = self.protectorExample?.otpWithPinAuthInput(input: protectorPinAuthInput)
+                MyLogger.updateLog(self.textViewLogger, title: "OTP Value", message: "\(otp ?? "nil")")
+            }
+        } else {
+            getUserInputPin(title: title) { (pin) in
+                let otp = self.protectorExample?.otp(pin)
+                MyLogger.updateLog(self.textViewLogger, title: "OTP Value", message: "\(otp ?? "nil")")
+            }
         }
     }
     
@@ -199,9 +208,18 @@ class ProtectorViewController: UIViewController, UIPickerViewDelegate, UIPickerV
         }
         
         let title : String = "Please enter the pin"
-        getUserInputOldAndNewPin(title: title) { (oldPin, newPin) in
-            let isPinChanged = self.protectorExample?.changePin(oldPin, newPin)
-            MyLogger.updateLogMessage(self.textViewLogger, message: "Change Pin Status :: \(isPinChanged!)", status: isPinChanged!) 
+        if isUseGSK {
+            shownPinPadChangePinInput { (oldPinInput, newPinInput) in
+                let oldPinAuthInput = EMProtectorAuthInput.init(authInput: oldPinInput)
+                let newPinAuthInput = EMProtectorAuthInput.init(authInput: newPinInput)
+                let isPinChanged = self.protectorExample?.changePinWithAuthInput(oldPinAuthInput, newPinAuthInput)
+                MyLogger.updateLogMessage(self.textViewLogger, message: "Change Pin Status :: \(isPinChanged!)", status: isPinChanged!)
+            }
+        } else {
+            getUserInputOldAndNewPin(title: title) { (oldPin, newPin) in
+                let isPinChanged = self.protectorExample?.changePin(oldPin, newPin)
+                MyLogger.updateLogMessage(self.textViewLogger, message: "Change Pin Status :: \(isPinChanged!)", status: isPinChanged!)
+            }
         }
     }
     
@@ -222,10 +240,19 @@ class ProtectorViewController: UIViewController, UIPickerViewDelegate, UIPickerV
         }
         //2 Make sure the PIN provided is correct by Authenticating to the Server
         let title : String = "Please enter the pin"
-        getUserInputPin(title: title) { (pin) in
-            //3 Call activate API by providing PIN value
-            let isActivated = self.protectorExample?.activateSystemBiometric(pin)
-            MyLogger.updateLogMessage(self.textViewLogger, message: "isSystemBiometric Activated :: \(isActivated!)", status: isActivated!)
+        if isUseGSK {
+            shownPinPadPinInput { (pinAuthInput) in
+                //3 Call activate API by providing PIN value
+                let protectorPinAuthInput = EMProtectorAuthInput.init(authInput: pinAuthInput)
+                let isActivated = self.protectorExample?.activateSystemBiometric(pinAuthInput: protectorPinAuthInput)
+                MyLogger.updateLogMessage(self.textViewLogger, message: "isSystemBiometric Activated :: \(isActivated!)", status: isActivated!)
+            }
+        } else {
+            getUserInputPin(title: title) { (pin) in
+                //3 Call activate API by providing PIN value
+                let isActivated = self.protectorExample?.activateSystemBiometric(pin: pin)
+                MyLogger.updateLogMessage(self.textViewLogger, message: "isSystemBiometric Activated :: \(isActivated!)", status: isActivated!)
+            }
         }
     }
     
@@ -353,6 +380,121 @@ class ProtectorViewController: UIViewController, UIPickerViewDelegate, UIPickerV
             MyLogger.updateLogMessage(self.textViewLogger, message: log)
         }
         
+    }
+    
+    // MARK: Show Secure Keypad
+    func shownPinPadPinInput(completion: @escaping (EMPinAuthInput) -> Void) {
+        
+        /* SDK Limitation: Reference for dismissing modal view on finish, although self.presentedViewController could do the work */
+        var keyPadVC : UIViewController!
+        
+        //1. Create the builder for the keypad
+        let uiModule : EMUIModule = EMUIModule.init()
+        let secureInputService : EMSecureInputService = EMSecureInputService.init(module: uiModule)
+        let sBuilder : EMSecureInputBuilder = secureInputService.secureInputBuilder()
+        sBuilder.setFirstLabel("Enter PIN")
+        
+        /* 2. UI configuration on the builder */
+        configureWithBuilder(builder: sBuilder)
+        
+        /* 3. Build the EMSecureInputUi which contains the view controller and keypadview */
+        let inputUI : EMSecureInputUi = sBuilder.build(withScrambling: true, isDoubleInputField: false, displayMode: EMSecureInputUiDisplayMode.fullScreen) { [weak self](firstPin, secondPin) in
+            if self != nil {
+                /* 5.1 Dismiss the view */
+                keyPadVC.dismiss(animated: true, completion: nil)
+                /* 5.2 Always wipe the builder after use */
+                sBuilder.wipe()
+                keyPadVC = nil
+                completion(firstPin!)
+            }
+        }
+        
+        /* 4.1 Get the view controller from the EMSecureInputUi object and present accordingly */
+        keyPadVC = inputUI.viewController
+        
+        /* 4.2 Present according presentation style */
+        self.present(keyPadVC, animated: true, completion: nil);
+    }
+
+    func shownPinPadChangePinInput(completion: @escaping (EMPinAuthInput , EMPinAuthInput) -> Void) {
+        
+        /* SDK Limitation: Reference for dismissing modal view on finish, although self.presentedViewController could do the work */
+        var keyPadVC : UIViewController!
+        
+        //1. Create the builder for the keypad
+        let uiModule : EMUIModule = EMUIModule.init()
+        let secureInputService : EMSecureInputService = EMSecureInputService.init(module: uiModule)
+        let sBuilder : EMSecureInputBuilder = secureInputService.secureInputBuilder()
+        sBuilder.setFirstLabel("PIN")
+        sBuilder.setSecondLabel("New PIN")
+        
+        /* 2. UI configuration on the builder */
+        configureWithBuilder(builder: sBuilder)
+        
+        /* 3. Build the EMSecureInputUi which contains the view controller and keypadview */
+        let inputUI : EMSecureInputUi = sBuilder.build(withScrambling: true, isDoubleInputField: true, displayMode: EMSecureInputUiDisplayMode.fullScreen) { [weak self](firstPin, secondPin) in
+            if self != nil {
+                /* 5.1 Dismiss the view */
+                keyPadVC.dismiss(animated: true, completion: nil)
+                /* 5.2 Always wipe the builder after use */
+                sBuilder.wipe()
+                keyPadVC = nil
+                completion(firstPin!, secondPin!)
+            }
+        }
+        
+        /* 4.1 Get the view controller from the EMSecureInputUi object and present accordingly */
+        keyPadVC = inputUI.viewController
+        
+        /* 4.2 Present according presentation style */
+        self.present(keyPadVC, animated: true, completion: nil);
+    }
+
+
+    func configureWithBuilder (builder : EMSecureInputBuilder)
+    {
+        /* Keep Delete button enabled and visible */
+        builder.setIsDeleteButtonAlwaysEnabled(true)
+        
+        let keypadFrameColor : UIColor = UIColor.init(red: 0.70, green: 0.70, blue: 0.70, alpha: 1)
+        let gridGradientColors = [UIColor.clear, UIColor.init(red: 0.80, green: 0.80, blue: 0.80, alpha: 1)]// Only 2 are allowed
+        
+        let buttonBackgroundColor_Normal : UIColor = UIColor.init(red: 0.95, green: 0.95, blue: 0.95, alpha: 1)
+        
+        let okButtonTextColor_Normal : UIColor = UIColor.init(red: 0, green: (153.0/255.0), blue: 0, alpha: 1)
+        let okButtonTextColor_Disabled = UIColor.lightGray
+        let deleteButtonTextColor_Normal = UIColor.red
+        let deleteButtonTextColor_Disabled = UIColor.lightGray
+
+        let inputFieldBorderColor_Unfocused = UIColor.clear
+        let inputFieldBackgroundColor_Unfocused : UIColor = UIColor.init(red: 0.95, green: 0.95, blue: 0.95, alpha: 1)
+       
+        let inputFieldBorderColor_Focused : UIColor = UIColor.init(red: 0.67, green: 0.75, blue: 0.85, alpha: 1)
+        let inputFieldBackgroundColor_Focused : UIColor = UIColor.init(red: 0.8, green: 0.86, blue: 0.92, alpha: 1)
+
+        /* Frame and Keys */
+        builder.setKeypadFrameColor(keypadFrameColor)
+        builder.setKeypadGridGradientColors(gridGradientColors[0], gridGradientEnd: gridGradientColors[1])
+        builder.setButtonBackgroundColor(buttonBackgroundColor_Normal, for: EMSecureInputUiControlState.normal)
+        
+        
+        /* OK button */
+        builder.setOkButtonTextColor(okButtonTextColor_Normal, for: EMSecureInputUiControlState.normal)
+        builder.setOkButtonTextColor(okButtonTextColor_Disabled, for: EMSecureInputUiControlState.disabled)
+        builder.setOkButtonGradientColors(buttonBackgroundColor_Normal, buttonGradientEnd: buttonBackgroundColor_Normal, for: EMSecureInputUiControlState.normal)
+        builder.setOkButtonGradientColors(buttonBackgroundColor_Normal, buttonGradientEnd: buttonBackgroundColor_Normal, for: EMSecureInputUiControlState.disabled)
+        
+        /* Delete button */
+        builder.setDeleteButtonTextColor(deleteButtonTextColor_Normal, for: EMSecureInputUiControlState.normal)
+        builder.setDeleteButtonTextColor(deleteButtonTextColor_Disabled, for: EMSecureInputUiControlState.disabled)
+        builder.setDeleteButtonGradientColors(buttonBackgroundColor_Normal, buttonGradientEnd: buttonBackgroundColor_Normal, for: EMSecureInputUiControlState.normal)
+        builder.setDeleteButtonGradientColors(buttonBackgroundColor_Normal, buttonGradientEnd: buttonBackgroundColor_Normal, for: EMSecureInputUiControlState.disabled)
+        
+        /* Input fields focus, un-focus */
+        builder.setInputFieldBorderColor(inputFieldBorderColor_Unfocused, for: EMSecureInputUiControlFocusState.unfocused)
+        builder.setInputFieldBackgroundColor(inputFieldBackgroundColor_Unfocused, for: EMSecureInputUiControlFocusState.unfocused)
+        builder.setInputFieldBorderColor(inputFieldBorderColor_Focused, for: EMSecureInputUiControlFocusState.focused)
+        builder.setInputFieldBackgroundColor(inputFieldBackgroundColor_Focused, for: EMSecureInputUiControlFocusState.focused)
     }
     
 }

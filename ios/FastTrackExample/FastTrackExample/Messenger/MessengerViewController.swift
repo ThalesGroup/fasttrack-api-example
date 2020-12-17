@@ -317,7 +317,7 @@ class MessengerViewController: UIViewController {
                     MyLogger.updateLogMessage(logTextView, message: "There's no available OATH token that is able to be use to sign the request\nProvisioning with Mobile Protector is required", status: false)
                 } else {
                     // Get token device with uti, which get from transaction signing request object
-                    let tokenDevice = try protector.tokenDevice(userTokenID: Int32(request.userTokenIdForSigning), fingerpintCustomData: nil)
+                    let tokenDevice = try protector.tokenDevice(userTokenID: Int32(request.userTokenIdForSigning), fingerprintCustomData: nil)
                     let tokenDeviceName = tokenDeviceNames.first!
                     guard let serverChallengeData = request.ocraServerChallenge else {
                         return

@@ -48,13 +48,13 @@ class ProtectorExample {
                 switch otpType {
                 case .TOTP:
                     // 4.1 Get Token Device to be used to generate OTP
-                    oathTokenDevice = try oathProtector.tokenDevice(name: name, fingerpintCustomData: nil)
+                    oathTokenDevice = try oathProtector.tokenDevice(name: name, fingerprintCustomData: nil)
                 case .OCRA:
                     // 4.1 Get Token Device to be used to generate OTP
-                    oathTokenDevice = try oathProtector.tokenDevice(name: name, fingerpintCustomData: nil)
+                    oathTokenDevice = try oathProtector.tokenDevice(name: name, fingerprintCustomData: nil)
                 case .CAP:
                     // 4.1 Get Token Device to be used to generate OTP
-                    capTokenDevice = try capProtector.tokenDevice(name: name, fingerpintCustomData: nil)
+                    capTokenDevice = try capProtector.tokenDevice(name: name, fingerprintCustomData: nil)
                 }
             } catch let error as NSError {
                 statusLogger?.updateStatus("Error: \(error)")
@@ -193,6 +193,34 @@ class ProtectorExample {
         return otp
     }
     
+    func otpWithPinAuthInput(input: EMProtectorAuthInput) -> String? {
+        var otp:String?
+        do {
+            switch otpType {
+            case .TOTP:
+                // 4.2 Generate OTP by passing the authentication: PIN
+                otp = try oathTokenDevice?.otp(authInput: input)
+            case .OCRA:
+                let serverChallenge = "000000003"
+                let clientChallenge = "000000003"
+                let password = "password"
+                let session = "\u{20ac}" + "10"
+                let passwordHash = try oathTokenDevice?.ocraPasswordHash(password)
+                // 4.2 Generate OTP by passing the authentication: PIN
+                otp = try oathTokenDevice?.ocra(authInput: input,
+                                                serverChallengeQuestion: serverChallenge,
+                                                clientChallengeQuestion: clientChallenge,
+                                                passwordHash: passwordHash,
+                                                session: session)
+            case .CAP:
+                otp = generateCapOtpByAuthInput(input)
+            }
+        } catch let error as NSError {
+            statusLogger?.updateStatus("Error: \(error)")
+        }
+        return otp
+    }
+    
     private func generateCapOtpByPin(_ pin: String) ->String? {
         
         guard let capTokenDevice = capTokenDevice else { return nil }
@@ -293,6 +321,30 @@ class ProtectorExample {
         return retValue
     }
     
+    func changePinWithAuthInput(_ oldPin: EMProtectorAuthInput, _ newPin: EMProtectorAuthInput) ->Bool {
+        var retValue: Bool = false
+        do {
+            switch otpType {
+            case .TOTP:
+                guard let oathTokenDevice = oathTokenDevice else { return false }
+                try oathTokenDevice.changePin(oldPinAuthInput: oldPin, newPinAuthInput: newPin)
+
+                retValue = true
+            case .OCRA:
+                guard let oathTokenDevice = oathTokenDevice else { return false }
+                try oathTokenDevice.changePin(oldPinAuthInput: oldPin, newPinAuthInput: newPin)
+                retValue = true
+            case .CAP:
+                guard let capTokenDevice = capTokenDevice else { return false }
+                try capTokenDevice.changePin(oldPinAuthInput: oldPin, newPinAuthInput: newPin)
+                retValue = true
+            }
+        } catch let error as NSError {
+            statusLogger?.updateStatus("Error: \(error)")
+        }
+        return retValue
+    }
+    
     func getTokenNames() -> Set<String> {
         var retTokenNames = Set<String>()
         do {
@@ -357,7 +409,7 @@ class ProtectorExample {
         return tokenNamesSet
     }
     
-    func activateSystemBiometric(_ pin:String) ->Bool{
+    func activateSystemBiometric(pin:String) ->Bool{
         
         var isActivated = false
         
@@ -378,6 +430,36 @@ class ProtectorExample {
                 // Make sure the current PIN provided is correct by verifying the OTP value against the Server
                 // before calling this API
                 try capTokenDevice.activateSystemBiometricMode(pin: pin)
+                isActivated = true
+                break
+            }
+        }
+        catch let error as NSError {
+            statusLogger?.updateStatus("Error: \(error)")
+        }
+        
+        return isActivated
+    }
+    
+    func activateSystemBiometric(pinAuthInput:EMProtectorAuthInput) ->Bool{
+        var isActivated = false
+        do {
+            switch otpType {
+            case .TOTP, .OCRA:
+                guard let oathTokenDevice = oathTokenDevice else { return false }
+                
+                // Make sure the current PIN provided is correct by verifying the OTP value against the Server
+                // before calling this API
+                try oathTokenDevice.activateSystemBiometricMode(pinAuthInput: pinAuthInput)
+                isActivated = true
+                break
+                
+            case .CAP:
+                guard let capTokenDevice = capTokenDevice else { return false }
+                
+                // Make sure the current PIN provided is correct by verifying the OTP value against the Server
+                // before calling this API
+                try capTokenDevice.activateSystemBiometricMode(pinAuthInput: pinAuthInput)
                 isActivated = true
                 break
             }
@@ -487,7 +569,6 @@ class ProtectorExample {
                 guard let capTokenDevice = capTokenDevice else { return }
                 capTokenDevice.authenticateWithMessage(localizedMessage: "Authenticate to get cap", fallbackTitle: "Enter Pin", completionHandler: { (authInput, data, error) in
                     if (error == nil) {
-                        
                         let otp = self.generateCapOtpByAuthInput(authInput!)
                         completion(otp, nil)
                     }
