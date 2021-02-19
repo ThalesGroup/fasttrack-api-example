@@ -1,20 +1,17 @@
 package com.gemalto.idp.mobile.fasttrack.example;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.Button;
 
 import com.gemalto.idp.mobile.fasttrack.example.fragments.FragmentTabMessenger;
 import com.gemalto.idp.mobile.fasttrack.example.fragments.FragmentTabProtector;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
-
-    // UI Elements
-    private BottomNavigationView mTabBar = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,37 +25,51 @@ public class MainActivity extends AppCompatActivity {
         initGui();
     }
 
+    @Override
+    public void onBackPressed() {
+        boolean processed = false;
+
+        FragmentManager fm = getSupportFragmentManager();
+        Fragment fragment = fm.findFragmentById(R.id.fragment_container);
+        if (fragment instanceof OnBackPressed)
+            processed = ((OnBackPressed) fragment).onBackPressed();
+
+        if (!processed)
+            finish();
+    }
+
     /**
      * Initializes the GUI of the application.
      */
+    @SuppressLint("NonConstantResourceId")
     private void initGui() {
         setContentView(R.layout.activity_main);
 
-        mTabBar = findViewById(R.id.navigation);
+        final Button btnProtector = findViewById(R.id.tab_protector);
+        final Button btnMessenger = findViewById(R.id.tab_messenger);
 
-        // Load MobileProtector fragment by default
+        btnProtector.setOnClickListener(view -> {
+            loadFragment(new FragmentTabProtector());
 
-        loadFragment(new FragmentTabProtector());
-
-        mTabBar.setOnNavigationItemSelectedListener(item -> {
-            Fragment fragment = null;
-            switch (item.getItemId()) {
-                case R.id.navigation_protector:
-                    fragment = new FragmentTabProtector();
-                    break;
-                case R.id.navigation_messenger:
-                    fragment = new FragmentTabMessenger();
-                    break;
-            }
-
-            loadFragment(fragment);
-            return true;
+            btnProtector.setEnabled(false);
+            btnMessenger.setEnabled(true);
         });
+
+        btnMessenger.setOnClickListener(view -> {
+            loadFragment(new FragmentTabMessenger());
+
+            btnMessenger.setEnabled(false);
+            btnProtector.setEnabled(true);
+        });
+
+        // Display PROTECTOR by default
+        btnProtector.performClick();
     }
 
     /**
      * Load the selected fragment
-     * @param fragment
+     *
+     * @param fragment The fragment
      */
     private void loadFragment(Fragment fragment) {
         // load fragment
@@ -75,5 +86,9 @@ public class MainActivity extends AppCompatActivity {
     private void disableScreenShot() {
         getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE,
                 android.view.WindowManager.LayoutParams.FLAG_SECURE);
+    }
+
+    public interface OnBackPressed {
+        boolean onBackPressed();
     }
 }

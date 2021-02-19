@@ -1,43 +1,31 @@
-apply plugin: 'com.android.application'
+apply plugin: "com.android.application"
+apply from: "${rootDir}/build-android-based.gradle"
 
 project.ext {
-    distDir = "$projectDir/../../../../"
+    distDir = "${rootDir}/../../../"
+    ezioDir = "${distDir}/default/external"
 }
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "com.gemalto.idp.mobile.fasttrack.example"
-        minSdkVersion 19
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
 
         ndk {
-            abiFilters 'arm64-v8a', 'x86_64', 'armeabi-v7a', 'x86'
+            abiFilters "arm64-v8a", "x86_64", "armeabi-v7a", "x86"
         }
     }
+
     buildTypes {
         release {
             minifyEnabled true
             // Make sure it point to proguard-project.pro from Mobile Protector delivery as it contains specific configuration
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), "$distDir/proguard-project.pro", 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+
         debug {
             minifyEnabled true
             // Make sure it point to proguard-project.pro from Mobile Protector delivery as it contains specific configuration
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), "$distDir/proguard-project.pro", 'proguard-rules.pro'
-        }
-    }
-
-    sourceSets {
-        debug {
-            jniLibs.srcDirs += "$distDir/debug"
-        }
-
-        release {
-            jniLibs.srcDirs += "$distDir/release"
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
 
@@ -48,17 +36,17 @@ android {
 }
 
 dependencies {
-    debugImplementation files("$distDir/debug/libidpmobile.jar")
-    debugImplementation files("$distDir/fasttrack/debug/libidpmobilefasttrack.jar")
+    debugImplementation fileTree(dir: "${ezioDir}/debug", include: ["protector-oath.aar"])
+    debugImplementation files("${distDir}/fasttrack/debug/libidpmobilefasttrack.jar")
 
-    releaseImplementation files("$distDir/release/libidpmobile.jar")
-    releaseImplementation files("$distDir/fasttrack/release/libidpmobilefasttrack.jar")
+    releaseImplementation fileTree(dir: "${ezioDir}/release", include: ["protector-oath.aar"])
+    releaseImplementation files("${distDir}/fasttrack/release/libidpmobilefasttrack.jar")
 
     // JNA lib
-    implementation 'net.java.dev.jna:jna:5.5.0@aar'
+    implementation "net.java.dev.jna:jna:5.5.0@aar"
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.google.android.material:material:1.0.0'
-    
+    //noinspection GradleCompatible
+    implementation "com.android.support:appcompat-v7:${propAndroidSupport}"
+    //noinspection GradleCompatible
+    implementation "com.android.support:support-v4:${propAndroidSupport}"
 }

@@ -8,7 +8,7 @@ public class ProtectorConfigurations {
     public enum PinUsage {
         GET_OTP,
         CHANGE_PIN,
-        ACTIVATE_BIOFINGERPRINT
+        ACTIVATE_BIO_FINGERPRINT
     }
 
     /**

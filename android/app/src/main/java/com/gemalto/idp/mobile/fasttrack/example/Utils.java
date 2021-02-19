@@ -24,53 +24,53 @@ public class Utils {
 
     public static void hideKeyboard(Context context, EditText editText) {
         InputMethodManager imm = (InputMethodManager) context.getSystemService(INPUT_METHOD_SERVICE);
-        if (editText != null && editText.getWindowToken() != null) {
+        if (editText != null && editText.getWindowToken() != null && imm != null)
             imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-        }
     }
 
     public static void showKeyboard(Context context, EditText editText) {
         InputMethodManager imm = (InputMethodManager) context.getSystemService(INPUT_METHOD_SERVICE);
-        if (editText != null && editText.getWindowToken() != null) {
+        if (editText != null && editText.getWindowToken() != null && imm != null)
             imm.showSoftInput(editText, 0);
-        }
     }
 
     public static class MyLogger {
 
-        private static MyLogger sInstance = new MyLogger();
-
-        private MyLogger() {
-        }
+        private final static MyLogger sInstance = new MyLogger();
 
         public static MyLogger getsInstance() {
             return sInstance;
         }
 
-        public void updateLog(TextView textView, String title, String message){
+        public void updateLog(TextView textView, String title, String message) {
             updateLogTitle(textView, title);
             updateLogMessage(textView, message);
         }
 
-        public void updateLogTitle(TextView textView, String title){
+        public void updateLogTitle(TextView textView, String title) {
             if (textView != null) {
                 textView.append(generateLogTitle(title));
                 textView.append("\n");
             }
         }
 
-        public void updateLogMessage(TextView textView, String message){
+        public void updateLogMessage(TextView textView, String message) {
             if (textView != null) {
                 textView.append(message);
                 textView.append("\n");
             }
         }
 
-        public void updateLogMessage(TextView textView, String message, Boolean status){
+        public void updateLogMessage(TextView textView, String message, boolean status) {
             if (textView != null) {
                 textView.append(status ? generateNormalLog(message) : generateFailureLog(message));
                 textView.append("\n");
             }
+        }
+
+        public void cleanLog(TextView textView) {
+            if (textView != null)
+                textView.setText("");
         }
     }
 
@@ -78,46 +78,39 @@ public class Utils {
      * Hex String to byte array conversion
      */
     public static final class Hex {
-
-        // Hide Class Constructor
-        private Hex() {
-        }
-
         /**
          * @param s Hex String
          * @return byte array
          */
         public static byte[] compress(String s) {
-            final int slen = s.length();
-            if (slen % 2 != 0) {
+            int slen = s.length();
+            if (slen % 2 != 0)
                 throw new IllegalArgumentException("Odd length");
-            }
-            byte bs[] = new byte[slen / 2];
+
+            byte[] bs = new byte[slen / 2];
             for (int i = 0; i < slen / 2; i++) {
                 String sub = s.substring(i * 2, (i * 2) + 2);
                 bs[i] = (byte) Integer.parseInt(sub, 16);
             }
+
             return bs;
         }
 
-        /**
-         * @param bs byte array
-         * @return Hex String
-         */
-        private static final char[] C = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        private static final char[] CHARS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
         public static String expand(byte[] bs) {
-            if (bs == null) {
+            if (bs == null)
                 return "";
-            }
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < bs.length; ++i) {
-                char b1 = C[(bs[i] & 0xF0) >> 4];
-                char b2 = C[bs[i] & 0x0F];
+
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bs) {
+                char b1 = CHARS[(b & 0xF0) >> 4];
+                char b2 = CHARS[b & 0x0F];
                 sb.append(b1);
                 sb.append(b2);
             }
+
             return sb.toString();
         }
     }
-
 }

@@ -1,11 +1,17 @@
 package com.gemalto.idp.mobile.fasttrack.example.fragments;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.text.InputFilter;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,14 +24,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.gemalto.idp.mobile.authentication.mode.pin.PinAuthInput;
 import com.gemalto.idp.mobile.fasttrack.FastTrack;
 import com.gemalto.idp.mobile.fasttrack.FastTrackException;
+import com.gemalto.idp.mobile.fasttrack.example.MainActivity;
 import com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations;
 import com.gemalto.idp.mobile.fasttrack.example.R;
 import com.gemalto.idp.mobile.fasttrack.example.Utils;
 import com.gemalto.idp.mobile.fasttrack.protector.BioFingerprintAuthenticationCallbacks;
-import com.gemalto.idp.mobile.fasttrack.protector.BiometricAuthenticationCallbacks;
 import com.gemalto.idp.mobile.fasttrack.protector.BioFingerprintAuthenticationStatus;
+import com.gemalto.idp.mobile.fasttrack.protector.BiometricAuthenticationCallbacks;
 import com.gemalto.idp.mobile.fasttrack.protector.BiometricAuthenticationStatus;
 import com.gemalto.idp.mobile.fasttrack.protector.MobileProtector;
 import com.gemalto.idp.mobile.fasttrack.protector.ProtectorAuthInput;
@@ -39,25 +47,26 @@ import com.gemalto.idp.mobile.fasttrack.protector.oath.OathTokenDevice;
 import com.gemalto.idp.mobile.fasttrack.protector.oath.OathTokenDeviceCreationCallback;
 import com.gemalto.idp.mobile.fasttrack.protector.oath.OcraSettings;
 import com.gemalto.idp.mobile.fasttrack.protector.oath.TotpSettings;
+import com.gemalto.idp.mobile.ui.UiModule;
+import com.gemalto.idp.mobile.ui.secureinput.SecureInputBuilder;
+import com.gemalto.idp.mobile.ui.secureinput.SecureInputService;
+import com.gemalto.idp.mobile.ui.secureinput.SecureInputUi;
+import com.gemalto.idp.mobile.ui.secureinput.SecureKeypadListener;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Currency;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
-
 import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.ENU_OTP_TYPE.CAP;
 import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.ENU_OTP_TYPE.OATH_OCRA;
 import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.ENU_OTP_TYPE.OATH_TOTP;
-import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.PinUsage.ACTIVATE_BIOFINGERPRINT;
+import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.PinUsage.ACTIVATE_BIO_FINGERPRINT;
 import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.PinUsage.CHANGE_PIN;
 import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.PinUsage.GET_OTP;
 import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.getEpsDomain;
@@ -66,9 +75,19 @@ import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.g
 import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.getEpsRsaKeyModulus;
 import static com.gemalto.idp.mobile.fasttrack.example.ProtectorConfigurations.getEpsUrl;
 
-public class FragmentTabProtector extends Fragment implements AdapterView.OnItemSelectedListener {
+public class FragmentTabProtector extends Fragment implements
+        AdapterView.OnItemSelectedListener,
+        MainActivity.OnBackPressed {
 
-    private Utils.MyLogger mMyLogger = Utils.MyLogger.getsInstance();
+    private final Utils.MyLogger mMyLogger = Utils.MyLogger.getsInstance();
+
+    /**
+     * TODO
+     * Set this flag to true to enable the SecureKeyPad.
+     * <p>
+     * NOTE: Need to have proper activation code to use this feature.
+     */
+    private static final boolean USE_SECURE_KEYPAD = true;
 
     //region Member - UI elements
     private EditText mRegistrationCode;
@@ -77,17 +96,20 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
     private Button mChangePinButton;
     private Button mActivateBiometricBtn;
     private Button mDeactivateBiometricBtn;
-    private Button mGetOtpBiomericBtn;
+    private Button mGetOtpBiometricBtn;
     private Button mRemoveTokenDevice;
     private Button mListTokenDevice;
     private TextView mLogTextView;
     private RadioGroup mRadioGroup;
     private Spinner mTokenSpinner;
 
+    private View mOtpTabContainer;
+    private View mSecureKeypadContainer;
+
     private Activity mActivity;
     private BioMetricFragment bioMetricFragment;
-    private CancellationSignal mCancellationSignal = new CancellationSignal();
-    private ProtectorConfigurations.ENU_OTP_TYPE mCurentOtpType;
+    private final CancellationSignal mCancellationSignal = new CancellationSignal();
+    private ProtectorConfigurations.ENU_OTP_TYPE mCurrentOtpType;
     //endregion
 
     //region Member
@@ -96,22 +118,19 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
     private List<String> defaultTds;
 
     private CapMobileProtector mCapMobileProtector;
-    private List<String> mCapTokenDevices = new ArrayList<>();
 
     // OATH-TOTP and OATH-OCRA use the same oath protector
     private OathMobileProtector mOathMobileProtector;
-    private List<String> mTotpTokenDevices = new ArrayList<>();
-    private List<String> mOcraTokenDevices = new ArrayList<>();
-
-    private String mCurrentPin;
     //endregion
 
-    //region Override
+    //region UI Callback
     @Nullable
     @Override
-    public View onCreateView(@NonNull final LayoutInflater inflater,
-                             @Nullable final ViewGroup container,
-                             @Nullable final Bundle savedInstanceState) {
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
         final View retValue = initGui(inflater);
 
         mActivity = getActivity();
@@ -119,14 +138,16 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         try {
             initMobileProtectors();
             try {
-                updateTokenSpinner(mCurentOtpType, getCurrentTokenDevice());
+                updateTokenSpinner(mCurrentOtpType, getCurrentTokenDevice());
             } catch (FastTrackException e) {
                 // Print the error
-                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                        + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
             }
         } catch (MalformedURLException e) {
             // Print the error
-            mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+            mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                    + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
         }
 
         return retValue;
@@ -138,6 +159,15 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+
+        // Dismiss the SecureKeypad for security reason
+        onBackPressed();
+        mMyLogger.cleanLog(mLogTextView);
+    }
+
+    @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // On selecting a spinner item
         String item = parent.getItemAtPosition(position).toString();
@@ -146,43 +176,61 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
     }
 
-    public void onNothingSelected(AdapterView<?> arg0) {
+    public void onNothingSelected(AdapterView<?> arg0) { }
+
+    @Override
+    public boolean onBackPressed() {
+        // Clean any cached PIN input
+        if (mCurrentPinInput != null) {
+            mCurrentPinInput.wipe();
+            mCurrentPinInput = null;
+        }
+
+        return dismissSecureKeypad();
     }
     //endregion
 
+    @SuppressLint("InflateParams")
     private View initGui(final LayoutInflater inflater) {
-        final View retValue = inflater.inflate(R.layout.fragment_tab_protector, null);
+        View mainView = inflater.inflate(R.layout.fragment_tab_protector, null);
 
-        mRegistrationCode = retValue.findViewById(R.id.protector_registration_code);
-        mProvisionButton = retValue.findViewById(R.id.provision);
-        mGetOtpPinButton = retValue.findViewById(R.id.getOtpByPin);
-        mChangePinButton = retValue.findViewById(R.id.changePin);
-        mActivateBiometricBtn = retValue.findViewById(R.id.activateBiometric);
-        mDeactivateBiometricBtn = retValue.findViewById(R.id.deactivateBiometric);
-        mGetOtpBiomericBtn = retValue.findViewById(R.id.getOtpByBiometric);
-        mRemoveTokenDevice = retValue.findViewById(R.id.removeTokenDevice);
-        mListTokenDevice = retValue.findViewById(R.id.listTokenDevices);
-        mLogTextView = retValue.findViewById(R.id.log);
-        mRadioGroup = retValue.findViewById(R.id.radio_otp_type);
+        mRegistrationCode = mainView.findViewById(R.id.protector_registration_code);
+        mProvisionButton = mainView.findViewById(R.id.provision);
+        mGetOtpPinButton = mainView.findViewById(R.id.getOtpByPin);
+        mChangePinButton = mainView.findViewById(R.id.changePin);
+        mActivateBiometricBtn = mainView.findViewById(R.id.activateBiometric);
+        mDeactivateBiometricBtn = mainView.findViewById(R.id.deactivateBiometric);
+        mGetOtpBiometricBtn = mainView.findViewById(R.id.getOtpByBiometric);
+        mRemoveTokenDevice = mainView.findViewById(R.id.removeTokenDevice);
+        mListTokenDevice = mainView.findViewById(R.id.listTokenDevices);
+        mLogTextView = mainView.findViewById(R.id.log);
+        mRadioGroup = mainView.findViewById(R.id.radio_otp_type);
 
-        mTokenSpinner = retValue.findViewById(R.id.tokenSpinner);
+        mTokenSpinner = mainView.findViewById(R.id.tokenSpinner);
+
+        mOtpTabContainer = mainView.findViewById(R.id.otp_tab_container);
+        mSecureKeypadContainer = mainView.findViewById(R.id.secure_keypad_container);
 
         mRadioGroup.check(R.id.radioOathTotp);
-        mCurentOtpType = OATH_TOTP;
+        mCurrentOtpType = OATH_TOTP;
 
         setListeners();
 
-        return retValue;
+        return mainView;
     }
 
-    private void updateTokenSpinner(ProtectorConfigurations.ENU_OTP_TYPE otp_type, String selectedToken) throws FastTrackException {
+    private void updateTokenSpinner(
+            ProtectorConfigurations.ENU_OTP_TYPE otp_type,
+            String selectedToken
+    ) throws FastTrackException {
 
         Set<String> tokenDevices = getTokenNames(otp_type);
         // Spinner click listener
         mTokenSpinner.setOnItemSelectedListener(this);
 
         // Creating adapter for spinner initialising with totp token devices.
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(mActivity, android.R.layout.simple_spinner_item, new ArrayList<>(tokenDevices));
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(mActivity,
+                android.R.layout.simple_spinner_item, new ArrayList<>(tokenDevices));
 
         // Drop down layout style - list view with radio button
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -199,7 +247,7 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
     private void initMobileProtectors() throws MalformedURLException {
 
-        // 2 Initialization of Mobile Protector which can be either OATH or CAP
+        // 2. Initialization of Mobile Protector which can be either OATH or CAP
         // Normally we only need to choose either one of them
 
         // 2.a Initialization for Oath Mobile Protector
@@ -210,7 +258,8 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
                 getEpsRsaKeyId(),
                 getEpsRsaKeyExponent(),
                 getEpsRsaKeyModulus()
-        ).build();
+        )
+                .build();
 
         // 2.b Initialization for CAP Mobile Protector
         mCapMobileProtector = FastTrack.getInstance().getCapMobileProtectorBuilder(
@@ -220,7 +269,8 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
                 getEpsRsaKeyId(),
                 getEpsRsaKeyExponent(),
                 getEpsRsaKeyModulus()
-        ).build();
+        )
+                .build();
     }
 
     /**
@@ -238,18 +288,22 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         defaultTds.add("4");
     }
 
+    @SuppressLint("NonConstantResourceId")
     private void setListeners() {
         mProvisionButton.setOnClickListener(v -> {
+            Utils.hideKeyboard(mActivity, mRegistrationCode);
 
-            mMyLogger.updateLogTitle(mLogTextView, "Provisioning " + mCurentOtpType + " Token");
+            mMyLogger.updateLogTitle(mLogTextView, "Provisioning " + mCurrentOtpType + " Token");
 
-            switch (mCurentOtpType) {
+            switch (mCurrentOtpType) {
                 case OATH_TOTP:
                     provisionOathTotpToken();
                     break;
+
                 case OATH_OCRA:
                     provisionOathOcraToken();
                     break;
+
                 case CAP:
                     provisionCapToken();
                     break;
@@ -257,15 +311,24 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         });
 
         mGetOtpPinButton.setOnClickListener(v -> {
-            displayPinDialog(GET_OTP);
+            if (USE_SECURE_KEYPAD)
+                showSecureKeyPad(GET_OTP);
+            else
+                displayPinDialog(GET_OTP);
         });
 
         mChangePinButton.setOnClickListener(v -> {
-            displayPinDialog(CHANGE_PIN);
+            if (USE_SECURE_KEYPAD)
+                showSecureKeyPad(CHANGE_PIN);
+            else
+                displayPinDialog(CHANGE_PIN);
         });
 
         mActivateBiometricBtn.setOnClickListener(v -> {
-            displayPinDialog(ACTIVATE_BIOFINGERPRINT);
+            if (USE_SECURE_KEYPAD)
+                showSecureKeyPad(ACTIVATE_BIO_FINGERPRINT);
+            else
+                displayPinDialog(ACTIVATE_BIO_FINGERPRINT);
         });
 
         mDeactivateBiometricBtn.setOnClickListener(v -> {
@@ -273,29 +336,31 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
                 deactivateBiometric();
             } catch (FastTrackException e) {
                 // Print the error
-                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                        + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
             }
         });
 
-        mGetOtpBiomericBtn.setOnClickListener(v -> {
+        mGetOtpBiometricBtn.setOnClickListener(v -> {
             try {
                 getOtpByBiometric();
             } catch (FastTrackException e) {
                 // Print the error
-                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                        + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
             }
         });
 
         mListTokenDevice.setOnClickListener(v -> {
             try {
                 mMyLogger.updateLogTitle(mLogTextView, "TokenDevices");
-                Set<String> remainingTokens = getTokenNames(mCurentOtpType);
-                for (String tokenName : remainingTokens) { // pick up the first token.
+                Set<String> remainingTokens = getTokenNames(mCurrentOtpType);
+                for (String tokenName : remainingTokens)
                     mMyLogger.updateLogMessage(mLogTextView, tokenName);
-                }
             } catch (FastTrackException e) {
                 // Print the error
-                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                        + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
             }
         });
 
@@ -304,72 +369,84 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
                 removeTokenDevice();
             } catch (FastTrackException e) {
                 // Print the error
-                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                        + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
             }
         });
 
         mRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
             switch (checkedId) {
                 case R.id.radioOathTotp:
-                    mCurentOtpType = OATH_TOTP;
+                    mCurrentOtpType = OATH_TOTP;
                     break;
+
                 case R.id.radioOathOcra:
-                    mCurentOtpType = OATH_OCRA;
+                    mCurrentOtpType = OATH_OCRA;
                     break;
+
                 case R.id.radioCap:
-                    mCurentOtpType = CAP;
+                    mCurrentOtpType = CAP;
                     break;
             }
 
             try {
-                updateTokenSpinner(mCurentOtpType, getCurrentTokenDevice());
+                updateTokenSpinner(mCurrentOtpType, getCurrentTokenDevice());
             } catch (FastTrackException e) {
                 // Print the error
-                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                        + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
             }
         });
     }
 
     private String getCurrentTokenDevice() {
-        String currentTokenDevice = null;
+        String deviceName = null;
 
-        if (mTokenSpinner.getSelectedItem() != null) {
-            currentTokenDevice = mTokenSpinner.getSelectedItem().toString();
-        }
+        if (mTokenSpinner.getSelectedItem() != null)
+            deviceName = mTokenSpinner.getSelectedItem().toString();
 
-        return currentTokenDevice;
+        return deviceName;
     }
 
-    private Set<String> getTokenNames(ProtectorConfigurations.ENU_OTP_TYPE otpType) throws FastTrackException {
+    private Set<String> getTokenNames(ProtectorConfigurations.ENU_OTP_TYPE otpType)
+            throws FastTrackException {
 
         Set<String> retTokenNames = new HashSet<>();
         Set<String> tokenNames;
 
         switch (otpType) {
-            case OATH_TOTP:
+            case OATH_TOTP: {
                 tokenNames = mOathMobileProtector.getTokenDeviceNames();
                 for (String tokenName : tokenNames) { // pick up the first token.
                     if (tokenName.startsWith("TOKEN_TOTP_")) {
                         retTokenNames.add(tokenName);
+                        break;
                     }
                 }
                 break;
-            case OATH_OCRA:
+            }
+
+            case OATH_OCRA: {
                 tokenNames = mOathMobileProtector.getTokenDeviceNames();
                 for (String tokenName : tokenNames) { // pick up the first token.
                     if (tokenName.startsWith("TOKEN_OCRA_")) {
                         retTokenNames.add(tokenName);
+                        break;
                     }
                 }
                 break;
-            case CAP:
+            }
+
+            case CAP: {
                 tokenNames = mCapMobileProtector.getTokenDeviceNames();
                 for (String tokenName : tokenNames) { // pick up the first token.
                     if (tokenName.startsWith("TOKEN_CAP_")) {
                         retTokenNames.add(tokenName);
+                        break;
                     }
                 }
                 break;
+            }
         }
 
         return retTokenNames;
@@ -388,19 +465,23 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
             OathTokenDeviceCreationCallback callback = new OathTokenDeviceCreationCallback() {
                 @Override
                 public void onSuccess(OathTokenDevice oathTokenDevice, Map<String, String> extension) {
-                    mMyLogger.updateLog(mLogTextView, "Provision OATH_TOTP Success", "Token " + oathTokenName + " created.");
+                    mMyLogger.updateLog(mLogTextView, "Provision OATH_TOTP Success",
+                            "Token " + oathTokenName + " created.");
+
                     try {
                         updateTokenSpinner(OATH_TOTP, oathTokenName);
                     } catch (FastTrackException e) {
                         // Print the error
-                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                                + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
                     }
                 }
 
                 @Override
                 public void onError(FastTrackException e) {
                     // Print the error
-                    mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                    mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                            + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
                 }
             };
 
@@ -410,7 +491,8 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
         } catch (Exception e) {
             // Print the error
-            mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+            mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                    + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
         }
     }
 
@@ -429,18 +511,22 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
             OathTokenDeviceCreationCallback callback = new OathTokenDeviceCreationCallback() {
                 @Override
                 public void onSuccess(OathTokenDevice oathTokenDevice, Map<String, String> extension) {
-                    mMyLogger.updateLog(mLogTextView, "Provision OATH_OCRA Success", "Token " + oathTokenName + " created.");
+                    mMyLogger.updateLog(mLogTextView, "Provision OATH_OCRA Success",
+                            "Token " + oathTokenName + " created.");
+
                     try {
                         updateTokenSpinner(OATH_OCRA, oathTokenName);
                     } catch (FastTrackException e) {
                         // Print the error
-                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                                + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
                     }
                 }
 
                 @Override
                 public void onError(FastTrackException e) {
-                    mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                    mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                            + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
                 }
             };
 
@@ -450,7 +536,8 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
         } catch (Exception e) {
             // Print the error
-            mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+            mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                    + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
         }
     }
 
@@ -465,19 +552,23 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
             CapTokenDeviceCreationCallback callback = new CapTokenDeviceCreationCallback() {
                 @Override
                 public void onSuccess(CapTokenDevice capTokenDevice, Map<String, String> extension) {
-                    mMyLogger.updateLog(mLogTextView, "Provision CAP Success", "Token " + capTokenName + " created.");
+                    mMyLogger.updateLog(mLogTextView, "Provision CAP Success",
+                            "Token " + capTokenName + " created.");
+
                     try {
                         updateTokenSpinner(CAP, capTokenName);
                     } catch (FastTrackException e) {
                         // Print the error
-                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                                + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
                     }
                 }
 
                 @Override
                 public void onError(FastTrackException e) {
                     // Print the error
-                    mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                    mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                            + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
                 }
             };
 
@@ -490,17 +581,235 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
         } catch (Exception e) {
             // Print the error
-            mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+            mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                    + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
         }
 
     }
     //endregion Provision Tokens
 
+    //region SecureKeyPad
+    private SecureInputBuilder mKeypadBuilder;
+
+    private ProtectorAuthInput mCurrentPinInput = null;
+
+    private static final String TAG_SKP = "SecureKeyPad";
+
+    /**
+     * Display the SecureKeypad for PIN input
+     *
+     * @param pinUsage The purpose of showing keypad, for PIN value or changing PIN
+     */
+    private void showSecureKeyPad(ProtectorConfigurations.PinUsage pinUsage) {
+        DialogFragment keypadFragment = null;
+
+        if (getCurrentTokenDevice() == null) {
+            mMyLogger.updateLogMessage(mLogTextView, "No TokenDevice selected.");
+            return;
+        }
+
+        do {
+            // Configure the secure keypad
+            // For more information on configure the SecureKeyPad, check the EzioMobileExample application
+
+            SecureKeypadListener listener = new SecureKeypadListener() {
+                @Override
+                public void onKeyPressedCountChanged(int i, int i1) { }
+
+                @Override
+                public void onInputFieldSelected(int i) { }
+
+                @Override
+                public void onOkButtonPressed() { }
+
+                @Override
+                public void onDeleteButtonPressed() { }
+
+                @Override
+                public void onFinish(PinAuthInput pin1, PinAuthInput pin2) {
+                    // 0. Dismiss and clean up the current keypad first
+                    dismissSecureKeypad();
+
+                    // 1. Process the pin result
+
+                    //region 1.1 Switch the data type
+                    ProtectorAuthInput pinInput = null;
+                    switch (mCurrentOtpType) {
+                        case CAP:
+                            pinInput = mCapMobileProtector.getProtectorAuthInput(pin1);
+                            break;
+
+                        case OATH_OCRA:
+                        case OATH_TOTP:
+                            pinInput = mOathMobileProtector.getProtectorAuthInput(pin1);
+                            break;
+                    }
+                    //endregion
+
+                    //region 1.2 Process the PIN input based on the use-case
+                    switch (pinUsage) {
+                        case GET_OTP: {
+                            // Generate the OTP using the PIN input
+                            try {
+                                getOtpUsingPin(null, pinInput);
+                            } catch (FastTrackException ex) {
+                                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                                        + ex.getClass().getName() + " | Reason : " + ex.getMessage() + "\n", false);
+                            } finally {
+                                // Always wipe the pin after usage
+                                pinInput.wipe();
+                            }
+                            break;
+                        }
+
+                        case CHANGE_PIN: {
+                            //region Cache the current pin input?
+                            if (mCurrentPinInput == null) {
+                                mMyLogger.updateLogTitle(mLogTextView, "CHANGE PIN");
+
+                                // Save the current PIN
+                                // NOTE: The application should verify again that the current PIN is correct,
+                                // since the SDK can not check it. If this PIN is wrong, the later generated OTP will not be verified.
+                                mCurrentPinInput = pinInput;
+
+                                // Show the SecureKeypad again with doubled-input
+                                showSecureKeyPad(pinUsage);
+                                break;
+                            }
+                            //endregion
+
+                            //region Process the change PIN
+                            // Verify the the pin inputs are identical
+                            if (!pin1.equals(pin2)) {
+                                mMyLogger.updateLogMessage(mLogTextView, "The two new PINs are not same!");
+                                mCurrentPinInput = null;
+                                break;
+                            }
+
+                            try {
+                                changePin(null, null, mCurrentPinInput, pinInput);
+                                mMyLogger.updateLogMessage(mLogTextView, "Change PIN successfully");
+                            } catch (FastTrackException ex) {
+                                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                                        + ex.getClass().getName() + " | Reason : " + ex.getMessage() + "\n", false);
+                            } finally {
+                                // Always wipe the pin after usage
+                                pinInput.wipe();
+                                mCurrentPinInput.wipe();
+                                mCurrentPinInput = null;
+                            }
+                            //endregion
+                            break;
+                        }
+
+                        case ACTIVATE_BIO_FINGERPRINT: {
+                            mMyLogger.updateLogTitle(mLogTextView, "ACTIVATE BioFingerprint/Biometric");
+
+                            try {
+
+                                activateBiometric(null, pinInput);
+                                mMyLogger.updateLogMessage(mLogTextView, "BioFingerprint/Biometric activated");
+
+                            } catch (FastTrackException ex) {
+                                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                                        + ex.getClass().getName() + " | Reason : " + ex.getMessage() + "\n", false);
+                            } finally {
+                                // Always wipe the pin after usage
+                                pinInput.wipe();
+                            }
+
+                            break;
+                        }
+                    }
+                    //endregion
+                }
+
+                @Override
+                public void onError(String error) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "SecureKeyPad error: " + error + "\n", false);
+                }
+            };
+
+            try {
+                if (mKeypadBuilder != null) {
+                    mKeypadBuilder.wipe();
+                    mKeypadBuilder = null;
+                }
+
+                SecureInputService siService = SecureInputService.create(UiModule.create());
+                mKeypadBuilder = siService.getSecureInputBuilder();
+
+                mKeypadBuilder.setKeypadMatrix(4, 4);
+                mKeypadBuilder.setMaximumAndMinimumInputLength(PIN_LENGTH, PIN_LENGTH);
+
+                mKeypadBuilder.setKeys(Arrays.asList('1', '2', '3', '4', '5', '6', '7', '8', '9', '0'),
+                        null);
+                mKeypadBuilder.setShiftKeys(Arrays.asList('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
+                        null);
+
+                boolean isDoubledInput = (pinUsage == CHANGE_PIN && mCurrentPinInput != null);
+                if (isDoubledInput) {
+                    mKeypadBuilder.setFirstLabel("Enter new PIN");
+                    mKeypadBuilder.setSecondLabel("Confirm new PIN");
+                }
+
+                SecureInputUi siUI = mKeypadBuilder.buildKeypad(true, isDoubledInput, false, listener);
+                keypadFragment = siUI.getDialogFragment();
+            } catch (Exception ex) {
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                        + ex.getClass().getName() + " | Reason : " + ex.getMessage() + "\n", false);
+            }
+
+            if (keypadFragment == null) {
+                // Failed to initialise SecureKeyPad - Fallback to raw pin input
+                displayPinDialog(pinUsage);
+                break;
+            }
+
+            // Show the SecureKeypad
+            mOtpTabContainer.setVisibility(View.GONE);
+            mSecureKeypadContainer.setVisibility(View.VISIBLE);
+
+            FragmentManager fm = getFragmentManager();
+            fm.beginTransaction()
+                    .add(mSecureKeypadContainer.getId(), keypadFragment, TAG_SKP)
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                    .addToBackStack(null)
+                    .commit();
+        } while (false);
+    }
+
+    private boolean dismissSecureKeypad() {
+        boolean processed = false;
+
+        FragmentManager fm = getFragmentManager();
+        Fragment skpFragment = fm.findFragmentByTag(TAG_SKP);
+        if (skpFragment != null) {
+            fm.popBackStack();
+
+            mOtpTabContainer.setVisibility(View.VISIBLE);
+            mSecureKeypadContainer.setVisibility(View.GONE);
+            processed = true;
+        }
+
+        if (mKeypadBuilder != null) {
+            mKeypadBuilder.wipe();
+            mKeypadBuilder = null;
+        }
+
+        return processed;
+    }
+    //endregion
+
     //region Get OTPs - PIN
+
+    private static final int PIN_LENGTH = 8;
+
     private void displayPinDialog(ProtectorConfigurations.PinUsage pinUsage) {
 
-        String currentTokenDevice = getCurrentTokenDevice();
-        if (currentTokenDevice == null) {
+        String tkDeviceName = getCurrentTokenDevice();
+        if (tkDeviceName == null) {
             mMyLogger.updateLogMessage(mLogTextView, "No TokenDevice selected.");
             return;
         }
@@ -510,52 +819,63 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mActivity);
 
-        // set prompts.xml to alertdialog builder
+        // set prompts.xml to alert dialog builder
         alertDialogBuilder.setView(promptsView);
 
-        final TextView userInputHint = promptsView.findViewById(R.id.pinUsageHint);
+        TextView userInputHint = promptsView.findViewById(R.id.pinUsageHint);
         switch (pinUsage) {
             case GET_OTP:
                 userInputHint.setText(getString(R.string.enter_pin_to_get_otp));
                 break;
+
             case CHANGE_PIN:
                 userInputHint.setText(getString(R.string.txt_raw_pin_enter_old_pin_hint_label));
                 break;
-            case ACTIVATE_BIOFINGERPRINT:
+
+            case ACTIVATE_BIO_FINGERPRINT:
                 userInputHint.setText(getString(R.string.enter_pin_to_activate_biofingerprint));
                 break;
         }
 
         final EditText userInput = promptsView.findViewById(R.id.editTextPin);
+        userInput.setFilters(new InputFilter[]{
+                new InputFilter.LengthFilter(PIN_LENGTH)
+        });
 
         // set dialog message
         alertDialogBuilder
                 .setCancelable(false)
                 .setPositiveButton("OK",
                         (dialog, id) -> {
-
-                            mCurrentPin = userInput.getText().toString();
+                            String pinText = userInput.getText().toString();
 
                             switch (pinUsage) {
-                                case GET_OTP:
+                                case GET_OTP: {
                                     try {
-                                        getOtpUsingPin();
+                                        getOtpUsingPin(pinText, null);
                                     } catch (FastTrackException e) {
                                         // Print the error
-                                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                                        mMyLogger.updateLogMessage(mLogTextView,
+                                                "An error happen : " + e.getClass().getName() +
+                                                        " | Reason : " + e.getMessage() + "\n", false);
                                     }
                                     break;
+                                }
+
                                 case CHANGE_PIN:
-                                    displayChangePinDialog();
+                                    displayChangePinDialog(pinText);
                                     break;
-                                case ACTIVATE_BIOFINGERPRINT:
+
+                                case ACTIVATE_BIO_FINGERPRINT: {
                                     try {
-                                        activateBiometric();
+                                        activateBiometric(pinText, null);
                                     } catch (FastTrackException e) {
                                         // Print the error
-                                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                                        mMyLogger.updateLogMessage(mLogTextView,
+                                                "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
                                     }
                                     break;
+                                }
                             }
                         })
                 .setNegativeButton("Cancel",
@@ -565,42 +885,68 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         AlertDialog alertDialog = alertDialogBuilder.create();
         // show it
         alertDialog.show();
-
     }
 
-    private void getOtpUsingPin() throws FastTrackException {
-        String currentTokenDevice = getCurrentTokenDevice();
-        if (currentTokenDevice == null) {
+    private void getOtpUsingPin(
+            String pinText,
+            ProtectorAuthInput pinInput
+    ) throws FastTrackException {
+        String tkDeviceName = getCurrentTokenDevice();
+        if (tkDeviceName == null) {
             mMyLogger.updateLogMessage(mLogTextView, "No TokenDevice selected.");
             return;
         }
 
-        switch (mCurentOtpType) {
+        switch (mCurrentOtpType) {
             case OATH_TOTP:
-                generateOathTotpByPin();
+                generateOathTotpByPin(tkDeviceName, pinText, pinInput);
                 break;
+
             case OATH_OCRA:
-                generateOathOcraByPin();
+                generateOathOcraByPin(tkDeviceName, pinText, pinInput);
                 break;
+
             case CAP:
-                generateCapOtpByPin();
+                generateCapOtpByPin(tkDeviceName, pinText, pinInput);
                 break;
         }
     }
 
-    private void generateOathTotpByPin() throws FastTrackException {
+    private void generateOathTotpByPin(
+            String tkDeviceName,
+            String pinText,
+            ProtectorAuthInput pinInput
+    ) throws FastTrackException {
         // 4.1 Get Token Device to be used to generate OTP
-        OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(getCurrentTokenDevice(), null);
+        OathTokenDevice tokenDevice = mOathMobileProtector.getTokenDevice(tkDeviceName, null);
+        if (tokenDevice == null)
+            return;
 
         // 4.2 Generate OTP by passing the authentication: PIN
-        String otp = oathTokenDevice.getOtp(mCurrentPin);
-        mMyLogger.updateLog(mLogTextView, "Get OTP PIN", "Token: " + getCurrentTokenDevice() + "\n" + "OTP: " + otp);
+        String otp = null;
+
+        if (pinText != null) {
+            // 4.2.a Generate OTP by text PIN
+            otp = tokenDevice.getOtp(pinText);
+        } else if (pinInput != null) {
+            // 4.2.b Generate OTP by PIN input
+            otp = tokenDevice.getOtp(pinInput);
+        }
+
+        mMyLogger.updateLog(mLogTextView, "Get OTP PIN", "Token: "
+                + getCurrentTokenDevice() + "\n" + "OTP: " + otp);
     }
 
-    private void generateOathOcraByPin() throws FastTrackException {
+    private void generateOathOcraByPin(
+            String tkDeviceName,
+            String pinText,
+            ProtectorAuthInput pinInput
+    ) throws FastTrackException {
 
         // 4.1 Get Token Device to be used to generate OTP
-        OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(getCurrentTokenDevice(), null);
+        OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(tkDeviceName, null);
+        if (oathTokenDevice == null)
+            return;
 
         // Generate the OTP
         String serverChallenge = "000000003";
@@ -610,39 +956,65 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         byte[] passwordHash = oathTokenDevice.getOcraPasswordHash(password);
 
         // 4.2 Generate OTP by passing the authentication: PIN
-        String ocraOtp = oathTokenDevice.getOcraOtp(mCurrentPin, serverChallenge, clientChallenge, passwordHash, session);
-        mMyLogger.updateLog(mLogTextView, "Get OTP PIN", "Token: " + getCurrentTokenDevice() + "\n" + "OCRA OTP: " + ocraOtp);
+        String ocraOtp = null;
+
+        if (pinText != null) {
+            // 4.2.a Generate OTP by text PIN
+            ocraOtp = oathTokenDevice.getOcraOtp(pinText, serverChallenge, clientChallenge, passwordHash, session);
+        } else if (pinInput != null) {
+            // 4.2.b Generate OTP by PIN input
+            ocraOtp = oathTokenDevice.getOcraOtp(pinInput, serverChallenge, clientChallenge, passwordHash, session);
+        }
+
+        mMyLogger.updateLog(mLogTextView, "Get OTP PIN", "Token: "
+                + getCurrentTokenDevice() + "\n" + "OCRA OTP: " + ocraOtp);
     }
 
-    private void generateCapOtpByPin() throws FastTrackException {
-
-        String currentTokenDevice = getCurrentTokenDevice();
-
+    private void generateCapOtpByPin(
+            String tkDeviceName,
+            String pinText,
+            ProtectorAuthInput pinInput
+    ) throws FastTrackException {
         // 4.1 Get Token Device to be used to generate OTP
-        CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
+        CapTokenDevice tokenDevice = mCapMobileProtector.getTokenDevice(tkDeviceName, null);
+        if (tokenDevice == null)
+            return;
 
-        mMyLogger.updateLog(mLogTextView, "Get OTP PIN", "Current Token: " + currentTokenDevice);
+        mMyLogger.updateLog(mLogTextView, "Get OTP PIN", "Current Token: " + tkDeviceName);
 
         initCapValue();
 
-        //Mode 1
-        // 4.2 Generate OTP by passing the authentication: PIN
-        String otpMode1 = capTokenDevice.getOtpMode1(mCurrentPin, challenge, amount, currency);
+        // 4.2 Generate OTP
+        String otpMode1 = null;
+        String otpMode2 = null;
+        String otpMode2Tds = null;
+        String otpMode3 = null;
+
+        if (pinText != null) {
+            // 4.2.a Generate OTP by text PIN
+
+            otpMode1 = tokenDevice.getOtpMode1(pinText, challenge, amount, currency);
+
+            otpMode2 = tokenDevice.getOtpMode2(pinText);
+
+            otpMode2Tds = tokenDevice.getOtpMode2Tds(pinText, defaultTds);
+
+            otpMode3 = tokenDevice.getOtpMode3(pinText, challenge);
+        } else if (pinInput != null) {
+            // 4.2.b Generate OTP by PIN input
+
+            otpMode1 = tokenDevice.getOtpMode1(pinInput, challenge, amount, currency);
+
+            otpMode2 = tokenDevice.getOtpMode2(pinInput);
+
+            otpMode2Tds = tokenDevice.getOtpMode2Tds(pinInput, defaultTds);
+
+            otpMode3 = tokenDevice.getOtpMode3(pinInput, challenge);
+        }
+
         mMyLogger.updateLogMessage(mLogTextView, "OTP Mode1: " + otpMode1);
-
-        //Mode 2
-        // 4.2 Generate OTP by passing the authentication: PIN
-        String otpMode2 = capTokenDevice.getOtpMode2(mCurrentPin);
         mMyLogger.updateLogMessage(mLogTextView, "OTP Mode2: " + otpMode2);
-
-        //Mode 2 tds
-        // 4.2 Generate OTP by passing the authentication: PIN
-        String otpMode2Tds = capTokenDevice.getOtpMode2Tds(mCurrentPin, defaultTds);
         mMyLogger.updateLogMessage(mLogTextView, "OTP Mode2Tds: " + otpMode2Tds);
-
-        //Mode 3
-        // 4.2 Generate OTP by passing the authentication: PIN
-        String otpMode3 = capTokenDevice.getOtpMode3(mCurrentPin, challenge);
         mMyLogger.updateLogMessage(mLogTextView, "OTP Mode3: " + otpMode3);
     }
     //endregion
@@ -653,9 +1025,9 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
      * Displaying the change pin ***NOT*** using SecurePinPad
      */
     @SuppressWarnings("InflateParams")
-    private void displayChangePinDialog() {
-        String currentTokenDevice = getCurrentTokenDevice();
-        if (currentTokenDevice == null) {
+    private void displayChangePinDialog(String currentPin) {
+        String tkDeviceName = getCurrentTokenDevice();
+        if (tkDeviceName == null) {
             mMyLogger.updateLogMessage(mLogTextView, "No TokenDevice selected.");
             return;
         }
@@ -665,17 +1037,17 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         LayoutInflater inflater = LayoutInflater.from(mActivity);
         View dialogLayout = inflater.inflate(R.layout.verifycode_input_dialog, null);
 
+        InputFilter[] pinFilters = new InputFilter[]{
+                new InputFilter.LengthFilter(PIN_LENGTH)
+        };
+
         final EditText pinCodeTxt = dialogLayout.findViewById(R.id.txt_code);
         pinCodeTxt.setHint(R.string.txt_raw_pin_enter_pin_hint_label);
-        pinCodeTxt.setFilters(new InputFilter[]{
-                new InputFilter.LengthFilter(8),
-        });
+        pinCodeTxt.setFilters(pinFilters);
 
         final EditText confirmPinCodeTxt = dialogLayout.findViewById(R.id.txt_confirm_code);
         confirmPinCodeTxt.setVisibility(View.VISIBLE);
-        confirmPinCodeTxt.setFilters(new InputFilter[]{
-                new InputFilter.LengthFilter(8),
-        });
+        confirmPinCodeTxt.setFilters(pinFilters);
 
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(mActivity);
         builder.setView(dialogLayout);
@@ -694,14 +1066,16 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
                     if (!pin1.equals(pin2)) {
                         mMyLogger.updateLogMessage(mLogTextView, "The two PINs are not same.");
-                    } else {
-                        try {
-                            changePin(mCurrentPin, pin1);
-                        } catch (FastTrackException e) {
-                            // Print the error
-                            mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
-                        }
+                        return;
+                    }
+
+                    try {
+                        changePin(currentPin, pin1, null, null);
                         mMyLogger.updateLogMessage(mLogTextView, "Change PIN done!");
+                    } catch (FastTrackException e) {
+                        // Print the error
+                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                                + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
                     }
                 });
         builder.setNegativeButton(android.R.string.cancel,
@@ -714,23 +1088,46 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
     /**
      * To perform change pin:
-     * 1 Get current Token Device
-     * 2 Call changePin API by providing current and new PIN
+     * 1. Get current Token Device
+     * 2. Call changePin API by providing current and new PIN
+     *
+     * @param oldPin      The old PIN text
+     * @param newPin      The new PIN text
+     * @param oldPinInput The old PIN input
+     * @param newPinInput The new PIN input
      */
-    private void changePin(String oldPin, String newPin) throws FastTrackException {
+    private void changePin(
+            String oldPin, String newPin,
+            ProtectorAuthInput oldPinInput, ProtectorAuthInput newPinInput
+    ) throws FastTrackException {
 
-        String currentTokenDevice = getCurrentTokenDevice();
+        String tkDeviceName = getCurrentTokenDevice();
 
-        switch (mCurentOtpType) {
+        switch (mCurrentOtpType) {
             case OATH_TOTP:
-            case OATH_OCRA:
-                OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
-                oathTokenDevice.changePin(oldPin, newPin);
+            case OATH_OCRA: {
+                OathTokenDevice tokenDevice = mOathMobileProtector.getTokenDevice(tkDeviceName, null);
+                if (tokenDevice == null)
+                    break;
+
+                if (oldPin != null && newPin != null)
+                    tokenDevice.changePin(oldPin, newPin);
+                else if (oldPinInput != null && newPinInput != null)
+                    tokenDevice.changePin(oldPinInput, newPinInput);
                 break;
-            case CAP:
-                CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
-                capTokenDevice.changePin(oldPin, newPin);
+            }
+
+            case CAP: {
+                CapTokenDevice tokenDevice = mCapMobileProtector.getTokenDevice(tkDeviceName, null);
+                if (tokenDevice == null)
+                    break;
+
+                if (oldPin != null && newPin != null)
+                    tokenDevice.changePin(oldPin, newPin);
+                else if (oldPinInput != null && newPinInput != null)
+                    tokenDevice.changePin(oldPinInput, newPinInput);
                 break;
+            }
         }
     }
     //endregion
@@ -739,81 +1136,108 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
     /**
      * To activate Biometric Authentication:
-     * 1 Get current Token Device
-     * 2 Check if it has been activated previously
-     * 3 Make sure the PIN provided is correct by Authenticating to the Server
-     * 4 Call activate API by providing PIN value
+     * 1. Get current Token Device
+     * 2. Check if it has been activated previously
+     * 3. Make sure the PIN provided is correct by Authenticating to the Server
+     * 4. Call activate API by providing PIN value
+     *
+     * @param pinText  The PIN text value
+     * @param pinInput The PIN input
      */
-    private void activateBiometric() throws FastTrackException {
+    private void activateBiometric(
+            String pinText,
+            ProtectorAuthInput pinInput
+    ) throws FastTrackException {
 
-        String currentTokenDevice = getCurrentTokenDevice();
-        if (currentTokenDevice == null) {
+        String tkDeviceName = getCurrentTokenDevice();
+        if (tkDeviceName == null) {
             mMyLogger.updateLogMessage(mLogTextView, "No TokenDevice selected.");
             return;
         }
 
         mMyLogger.updateLogTitle(mLogTextView, "Activate Biometric");
-        switch (mCurentOtpType) {
+        switch (mCurrentOtpType) {
             case OATH_TOTP:
-            case OATH_OCRA:
-                OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
-                if (oathTokenDevice != null) {
-                    if (!canAuthenticate(mOathMobileProtector)) {
-                        mMyLogger.updateLogMessage(mLogTextView, "Biometric not supported&configured on this device!");
-                    } else {
-                        if (!isBioModeActivated(oathTokenDevice)) {
-                            activeBioMode(oathTokenDevice, mCurrentPin);
-                            mMyLogger.updateLogMessage(mLogTextView, "Biometric activated for token " + currentTokenDevice);
-                        } else {
-                            mMyLogger.updateLogMessage(mLogTextView, "Biometric already activated for token " + currentTokenDevice);
-                        }
-                    }
-                }
-                break;
-            case CAP:
-                CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
-                if (capTokenDevice != null) {
-                    if (!canAuthenticate(mCapMobileProtector)) {
-                        mMyLogger.updateLogMessage(mLogTextView, "Biometric not supported&configured on this device!");
-                    } else {
-                        if (!isBioModeActivated(capTokenDevice)) {
-                            activeBioMode(capTokenDevice, mCurrentPin);
-                            mMyLogger.updateLogMessage(mLogTextView, "Biometric activated for token " + currentTokenDevice);
-                        } else {
-                            mMyLogger.updateLogMessage(mLogTextView, "Biometric already activated for token " + currentTokenDevice);
-                        }
-                    }
-                }
-                break;
-        }
-    }
+            case OATH_OCRA: {
+                OathTokenDevice tokenDevice = mOathMobileProtector.getTokenDevice(tkDeviceName, null);
+                if (tokenDevice == null)
+                    break;
 
-    private boolean canAuthenticate(MobileProtector mobileProtector) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            return mobileProtector.isBioFingerprintModeSupported() && mobileProtector.isBioFingerprintModeConfigured();
-        } else {
-            if (mobileProtector.canBiometricAuthenticate() != 0) {
-                return false;
-            } else {
-                return true;
+                if (!canAuthenticate(mOathMobileProtector)) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "Biometric not supported&configured on this device!");
+                    break;
+                }
+
+                if (isBioModeActivated(tokenDevice)) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "Biometric already activated for token " + tkDeviceName);
+                    break;
+                }
+
+                activeBioMode(tokenDevice, pinText, pinInput);
+                mMyLogger.updateLogMessage(mLogTextView,
+                        "Biometric activated for token " + tkDeviceName);
+                break;
+            }
+
+            case CAP: {
+                CapTokenDevice tokenDevice = mCapMobileProtector.getTokenDevice(tkDeviceName, null);
+                if (tokenDevice == null)
+                    break;
+
+                if (!canAuthenticate(mCapMobileProtector)) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "Biometric not supported&configured on this device!");
+                    break;
+                }
+
+                if (isBioModeActivated(tokenDevice)) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "Biometric already activated for token " + tkDeviceName);
+                    break;
+                }
+
+                activeBioMode(tokenDevice, pinText, pinInput);
+                mMyLogger.updateLogMessage(mLogTextView,
+                        "Biometric activated for token " + tkDeviceName);
+                break;
             }
         }
     }
 
-    private boolean isBioModeActivated(TokenDevice tokenDevice) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            return tokenDevice.isBioFingerprintModeActivated();
-        } else {
-            return tokenDevice.isBiometricModeActivated();
-        }
+    @SuppressWarnings("deprecation")
+    private boolean canAuthenticate(MobileProtector protector) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+            return protector.isBioFingerprintModeSupported() && protector.isBioFingerprintModeConfigured();
+
+        return protector.canBiometricAuthenticate() == 0;
     }
 
-    private void activeBioMode(TokenDevice tokenDevice, String pinToTest) throws FastTrackException {
+    @SuppressWarnings("deprecation")
+    private boolean isBioModeActivated(TokenDevice tokenDevice) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+            return tokenDevice.isBioFingerprintModeActivated();
+
+        return tokenDevice.isBiometricModeActivated();
+    }
+
+    @SuppressWarnings("deprecation")
+    private void activeBioMode(TokenDevice tokenDevice, String pinText, ProtectorAuthInput pinInput)
+            throws FastTrackException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            tokenDevice.activateBioFingerprintMode(pinToTest);
-        } else {
-            tokenDevice.activateBiometricMode(pinToTest);
+            if (pinText != null)
+                tokenDevice.activateBioFingerprintMode(pinText);
+            else
+                tokenDevice.activateBioFingerprintMode(pinInput);
+
+            return;
         }
+
+        if (pinText != null)
+            tokenDevice.activateBiometricMode(pinText);
+        else
+            tokenDevice.activateBiometricMode(pinInput);
     }
     //endregion
 
@@ -821,45 +1245,57 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
     /**
      * To activate Biometric Authentication:
-     * 1 Get current Token Device
-     * 2 Check if it has been activated previously
-     * 3 Call de-activate API by providing PIN value
+     * 1. Get current Token Device
+     * 2. Check if it has been activated previously
+     * 3. Call de-activate API by providing PIN value
      */
     private void deactivateBiometric() throws FastTrackException {
-        String currentTokenDevice = getCurrentTokenDevice();
-        if (currentTokenDevice == null) {
+        String tkDeviceName = getCurrentTokenDevice();
+        if (tkDeviceName == null) {
             mMyLogger.updateLogMessage(mLogTextView, "No TokenDevice selected.");
             return;
         }
 
         mMyLogger.updateLogTitle(mLogTextView, "Deactivate Biometric");
-        switch (mCurentOtpType) {
+        switch (mCurrentOtpType) {
             case OATH_TOTP:
-            case OATH_OCRA:
-                OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
-                if (oathTokenDevice != null) {
-                    if (isBioModeActivated(oathTokenDevice)) {
-                        deActiveBioMode(oathTokenDevice);
-                        mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is deactivated for token device " + currentTokenDevice);
-                    } else {
-                        mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is not activated for token device " + currentTokenDevice);
-                    }
+            case OATH_OCRA: {
+                OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(tkDeviceName, null);
+                if (oathTokenDevice == null)
+                    break;
+
+                if (!isBioModeActivated(oathTokenDevice)) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "Biometric authentication is not activated for token device " + tkDeviceName);
+                    break;
                 }
+
+                deActiveBioMode(oathTokenDevice);
+                mMyLogger.updateLogMessage(mLogTextView,
+                        "Biometric authentication is deactivated for token device " + tkDeviceName);
                 break;
-            case CAP:
-                CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
-                if (capTokenDevice != null) {
-                    if (isBioModeActivated(capTokenDevice)) {
-                        deActiveBioMode(capTokenDevice);
-                        mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is deactivated for token device " + currentTokenDevice);
-                    } else {
-                        mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is not activated for token device " + currentTokenDevice);
-                    }
+            }
+
+            case CAP: {
+                CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(tkDeviceName, null);
+                if (capTokenDevice == null)
+                    break;
+
+                if (!isBioModeActivated(capTokenDevice)) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "Biometric authentication is not activated for token device " + tkDeviceName);
+                    break;
                 }
+
+                deActiveBioMode(capTokenDevice);
+                mMyLogger.updateLogMessage(mLogTextView,
+                        "Biometric authentication is deactivated for token device " + tkDeviceName);
                 break;
+            }
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void deActiveBioMode(TokenDevice tokenDevice) throws FastTrackException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             tokenDevice.deActivateBioFingerprintMode();
@@ -873,30 +1309,27 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
     //region Get OTPs - Biometric
     /**
      * To perform OTP generation with Biometric Authentication:
-     * 1 Prepare UI callback
-     * 2 Make sure Biometric has been activated previously
-     * 3 Get Token Device to be used to generate OTP
-     * 4 Call authenticate API
-     * 5 Upon successful authentication, generate OTP by passing the authentication
+     * 1. Prepare UI callback
+     * 2. Make sure Biometric has been activated previously
+     * 3. Get Token Device to be used to generate OTP
+     * 4. Call authenticate API
+     * 5. Upon successful authentication, generate OTP by passing the authentication
      */
-    private BioMetricFragment.BioFpFragmentCallback bioFpFragmentCallback = new BioMetricFragment.BioFpFragmentCallback() {
-        @Override
-        public void onCancel() {
-            cancelBioFingerprintPrompt();
-        }
-    };
+    private final BioMetricFragment.BioFpFragmentCallback bioFpFragmentCallback = this::cancelBioFingerprintPrompt;
 
-    private BioFingerprintAuthenticationCallbacks bioFpCallbacks = new BioFingerprintAuthenticationCallbacks() {
+    @SuppressWarnings("deprecation")
+    private final BioFingerprintAuthenticationCallbacks bioFpCallbacks = new BioFingerprintAuthenticationCallbacks() {
         @Override
         public void onSuccess(ProtectorAuthInput protectorAuthInput) {
-            if (bioMetricFragment != null) {
+            if (bioMetricFragment != null)
                 bioMetricFragment.dismiss();
-            }
+
             try {
                 getOtpUsingBiometric(protectorAuthInput);
             } catch (FastTrackException e) {
                 // Print the error
-                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                mMyLogger.updateLogMessage(mLogTextView, "An error happen : "
+                        + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
             }
         }
 
@@ -906,99 +1339,116 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         }
 
         @Override
-        public void onAuthenticationStatus(int i, String s) {
-            if (i == BioFingerprintAuthenticationStatus.BIO_FINGERPRINT_CANCELED) {
-                if (bioMetricFragment != null
-                        && bioMetricFragment.getDialog() != null
-                        && bioMetricFragment.getDialog().isShowing()) {
-                    bioMetricFragment.getDialog().dismiss();
-                }
-                showPinFallbackDialog();
-            } else {
-                bioMetricFragment.setPromptText(s);
+        @SuppressWarnings("deprecation")
+        public void onAuthenticationStatus(int status, String message) {
+            if (status != BioFingerprintAuthenticationStatus.BIO_FINGERPRINT_CANCELED) {
+                bioMetricFragment.setPromptText(message);
+                return;
             }
 
+            if (bioMetricFragment != null
+                    && bioMetricFragment.getDialog() != null
+                    && bioMetricFragment.getDialog().isShowing()) {
+                bioMetricFragment.getDialog().dismiss();
+            }
+
+            showPinFallbackDialog();
         }
     };
 
     private void cancelBioFingerprintPrompt() {
-        if (mCancellationSignal != null && !mCancellationSignal.isCanceled()) {
+        if (!mCancellationSignal.isCanceled())
             mCancellationSignal.cancel();
-        }
     }
 
-    private BiometricAuthenticationCallbacks bioMpCallbacks = new com.gemalto.idp.mobile.fasttrack.protector.BiometricAuthenticationCallbacks() {
-        @Override
-        public void onSuccess(ProtectorAuthInput protectorAuthInput) {
-            Log.d("TAG_BIOMETRIC", "biometricAuthenticateFastTrack onSuccess");
-            try {
-                getOtpUsingBiometric(protectorAuthInput);
-            } catch (FastTrackException e) {
-                // Print the error
-                mMyLogger.updateLogMessage(mLogTextView, "An error happen : " + e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
-            }
-        }
+    private final BiometricAuthenticationCallbacks bioMpCallbacks =
+            new com.gemalto.idp.mobile.fasttrack.protector.BiometricAuthenticationCallbacks() {
+                @Override
+                public void onSuccess(ProtectorAuthInput protectorAuthInput) {
+                    try {
+                        getOtpUsingBiometric(protectorAuthInput);
+                    } catch (FastTrackException e) {
+                        // Print the error
+                        mMyLogger.updateLogMessage(mLogTextView, "An error happen : " +
+                                e.getClass().getName() + " | Reason : " + e.getMessage() + "\n", false);
+                    }
+                }
 
-        @Override
-        public void onAuthenticationStatus(int i, String s) {
-            Log.d("TAG_BIOMETRIC", "status: " + i + " msg: " + s);
-            if (i == BiometricAuthenticationStatus.BIOMETRIC_CANCELED) {
-                showPinFallbackDialog();
-            } else {
-                mMyLogger.updateLogMessage(mLogTextView, s, false);
-            }
-        }
-    };
+                @Override
+                public void onAuthenticationStatus(int status, String message) {
+                    if (status == BiometricAuthenticationStatus.BIOMETRIC_CANCELED) {
+                        showPinFallbackDialog();
+                    } else {
+                        mMyLogger.updateLogMessage(mLogTextView, message,
+                                BiometricAuthenticationStatus.BIO_AUTHENTICATION_SUCCESS == status);
+                    }
+                }
+            };
 
+    @SuppressWarnings("deprecation")
     private void getOtpByBiometric() throws FastTrackException {
-
-        mMyLogger.updateLogTitle(mLogTextView, "OTP using Biometric");
-
-        String currentTokenDevice = getCurrentTokenDevice();
-        if (currentTokenDevice == null) {
+        String tkDeviceName = getCurrentTokenDevice();
+        if (tkDeviceName == null) {
             mMyLogger.updateLogMessage(mLogTextView, "No TokenDevice selected.");
             return;
         }
 
-        final CancellationSignal cancellationSignal = new CancellationSignal();
-        switch (mCurentOtpType) {
+        mMyLogger.updateLogTitle(mLogTextView, "OTP using Biometric");
+
+        CancellationSignal cancellationSignal = new CancellationSignal();
+        switch (mCurrentOtpType) {
             case OATH_TOTP:
-            case OATH_OCRA:
-                OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
-                if (isBioModeActivated(oathTokenDevice)) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-                        oathTokenDevice.authenticateWithBioFingerprint(mCancellationSignal, bioFpCallbacks);
-                    } else {
-                        oathTokenDevice.authenticateWithBiometric(
-                                "Test Biometric",
-                                "Login with biometrics",
-                                "Please use your biometric to verify your identity",
-                                "Cancel",
-                                cancellationSignal,
-                                bioMpCallbacks);
-                    }
-                } else {
-                    mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is not activated for token device " + currentTokenDevice);
+            case OATH_OCRA: {
+                OathTokenDevice tokenDevice = mOathMobileProtector.getTokenDevice(tkDeviceName, null);
+                if (tokenDevice == null)
+                    break;
+
+                if (!isBioModeActivated(tokenDevice)) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "Biometric authentication is not activated for token device " + tkDeviceName);
+                    break;
                 }
-                break;
-            case CAP:
-                CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
-                if (isBioModeActivated(capTokenDevice)) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-                        capTokenDevice.authenticateWithBioFingerprint(mCancellationSignal, bioFpCallbacks);
-                    } else {
-                        capTokenDevice.authenticateWithBiometric(
-                                "Test Biometric",
-                                "Login with biometrics",
-                                "Please use your biometric to verify your identity",
-                                "Cancel",
-                                cancellationSignal,
-                                bioMpCallbacks);
-                    }
-                }  else {
-                    mMyLogger.updateLogMessage(mLogTextView, "Biometric authentication is not activated for token device " + currentTokenDevice);
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                    tokenDevice.authenticateWithBioFingerprint(mCancellationSignal, bioFpCallbacks);
+                    break;
                 }
+
+                tokenDevice.authenticateWithBiometric(
+                        "Test Biometric",
+                        "Login with biometrics",
+                        "Please use your biometric to verify your identity",
+                        "Cancel",
+                        cancellationSignal,
+                        bioMpCallbacks);
                 break;
+            }
+
+            case CAP: {
+                CapTokenDevice tokenDevice = mCapMobileProtector.getTokenDevice(tkDeviceName, null);
+                if (tokenDevice == null)
+                    break;
+
+                if (!isBioModeActivated(tokenDevice)) {
+                    mMyLogger.updateLogMessage(mLogTextView,
+                            "Biometric authentication is not activated for token device " + tkDeviceName);
+                    break;
+                }
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                    tokenDevice.authenticateWithBioFingerprint(mCancellationSignal, bioFpCallbacks);
+                    break;
+                }
+
+                tokenDevice.authenticateWithBiometric(
+                        "Test Biometric",
+                        "Login with biometrics",
+                        "Please use your biometric to verify your identity",
+                        "Cancel",
+                        cancellationSignal,
+                        bioMpCallbacks);
+                break;
+            }
         }
     }
 
@@ -1008,16 +1458,14 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mActivity);
 
-        // set prompts.xml to alertdialog builder
+        // set prompts.xml to alert dialog builder
         alertDialogBuilder.setView(promptsView);
 
         // set dialog message
         alertDialogBuilder
                 .setCancelable(false)
                 .setPositiveButton("OK",
-                        (dialog, id) -> {
-                            displayPinDialog(GET_OTP);
-                        })
+                        (dialog, id) -> displayPinDialog(GET_OTP))
                 .setNegativeButton("Cancel",
                         (dialog, id) -> dialog.cancel());
 
@@ -1025,36 +1473,45 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         AlertDialog alertDialog = alertDialogBuilder.create();
         // show it
         alertDialog.show();
-
     }
 
-    private void getOtpUsingBiometric(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
-        switch (mCurentOtpType) {
+    private void getOtpUsingBiometric(ProtectorAuthInput protectorAuthInput)
+            throws FastTrackException {
+        switch (mCurrentOtpType) {
             case OATH_TOTP:
                 generateOathTotpByBiometric(protectorAuthInput);
                 break;
+
             case OATH_OCRA:
                 generateOathOcraByBiometric(protectorAuthInput);
                 break;
+
             case CAP:
                 generateCapOtpByBiometric(protectorAuthInput);
                 break;
         }
     }
 
-    private void generateOathTotpByBiometric(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
+    private void generateOathTotpByBiometric(ProtectorAuthInput protectorAuthInput)
+            throws FastTrackException {
         String currentTokenDevice = getCurrentTokenDevice();
         OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
+        if (oathTokenDevice == null)
+            return;
 
         // OTP
         String otp = oathTokenDevice.getOtp(protectorAuthInput);
-        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric", "Token: " + currentTokenDevice + "\n" + "OTP: " + otp);
+        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric",
+                "Token: " + currentTokenDevice + "\n" + "OTP: " + otp);
     }
 
-    private void generateOathOcraByBiometric(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
+    private void generateOathOcraByBiometric(ProtectorAuthInput protectorAuthInput)
+            throws FastTrackException {
         String currentTokenDevice = getCurrentTokenDevice();
 
         OathTokenDevice oathTokenDevice = mOathMobileProtector.getTokenDevice(currentTokenDevice, null);
+        if (oathTokenDevice == null)
+            return;
 
         // Generate the OTP
         String serverChallenge = "000000003";
@@ -1063,31 +1520,35 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
         String session = "\u20ac" + "10"; // (Euro) E2 82 AC + 31 + 30
         byte[] passwordHash = oathTokenDevice.getOcraPasswordHash(password);
         String ocraOtp = oathTokenDevice.getOcraOtp(protectorAuthInput, serverChallenge, clientChallenge, passwordHash, session);
-        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric", "Token: " + currentTokenDevice + "\n" + "OCRA OTP: " + ocraOtp);
+        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric",
+                "Token: " + currentTokenDevice + "\n" + "OCRA OTP: " + ocraOtp);
     }
 
-    private void generateCapOtpByBiometric(ProtectorAuthInput protectorAuthInput) throws FastTrackException {
-        String currentTokenDevice = getCurrentTokenDevice();
-        CapTokenDevice capTokenDevice = mCapMobileProtector.getTokenDevice(currentTokenDevice, null);
+    private void generateCapOtpByBiometric(ProtectorAuthInput protectorAuthInput)
+            throws FastTrackException {
+        String tkDeviceName = getCurrentTokenDevice();
+        CapTokenDevice tokenDevice = mCapMobileProtector.getTokenDevice(tkDeviceName, null);
+        if (tokenDevice == null)
+            return;
 
-        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric", "Current Token: " + currentTokenDevice);
+        mMyLogger.updateLog(mLogTextView, "Get OTP Biometric", "Current Token: " + tkDeviceName);
 
         initCapValue();
 
-        //Mode 1
-        String otpMode1 = capTokenDevice.getOtpMode1(protectorAuthInput, challenge, amount, currency);
+        // Mode 1
+        String otpMode1 = tokenDevice.getOtpMode1(protectorAuthInput, challenge, amount, currency);
         mMyLogger.updateLogMessage(mLogTextView, "OTP Mode1: " + otpMode1);
 
-        //Mode 2
-        String otpMode2 = capTokenDevice.getOtpMode2(protectorAuthInput);
+        // Mode 2
+        String otpMode2 = tokenDevice.getOtpMode2(protectorAuthInput);
         mMyLogger.updateLogMessage(mLogTextView, "OTP Mode2: " + otpMode2);
 
-        //Mode 2 tds
-        String otpMode2Tds = capTokenDevice.getOtpMode2Tds(protectorAuthInput, defaultTds);
+        // Mode 2 tds
+        String otpMode2Tds = tokenDevice.getOtpMode2Tds(protectorAuthInput, defaultTds);
         mMyLogger.updateLogMessage(mLogTextView, "OTP Mode2Tds: " + otpMode2Tds);
 
-        //Mode 3
-        String otpMode3 = capTokenDevice.getOtpMode3(protectorAuthInput, challenge);
+        // Mode 3
+        String otpMode3 = tokenDevice.getOtpMode3(protectorAuthInput, challenge);
         mMyLogger.updateLogMessage(mLogTextView, "OTP Mode3: " + otpMode3);
     }
     //endregion
@@ -1095,34 +1556,28 @@ public class FragmentTabProtector extends Fragment implements AdapterView.OnItem
     //region Remove token device
     private void removeTokenDevice() throws FastTrackException {
 
-        Set<String> tokenNames = getTokenNames(mCurentOtpType);
+        Set<String> tokenNames = getTokenNames(mCurrentOtpType);
         mMyLogger.updateLogTitle(mLogTextView, "Removed TokenDevices");
-        switch (mCurentOtpType) {
+        switch (mCurrentOtpType) {
             case OATH_TOTP:
-                for (String tokenName : tokenNames) { // pick up the first token.
+            case OATH_OCRA: {
+                for (String tokenName : tokenNames) {
                     mOathMobileProtector.removeTokenDevice(tokenName);
                     mMyLogger.updateLogMessage(mLogTextView, "Token: " + tokenName);
                 }
-                mTotpTokenDevices.clear();
                 break;
-            case OATH_OCRA:
-                for (String tokenName : tokenNames) { // pick up the first token.
-                    mOathMobileProtector.removeTokenDevice(tokenName);
-                    mMyLogger.updateLogMessage(mLogTextView, "Token: " + tokenName);
-                }
-                mOcraTokenDevices.clear();
-                break;
-            case CAP:
-                for (String tokenName : tokenNames) { // pick up the first token.
+            }
+
+            case CAP: {
+                for (String tokenName : tokenNames) {
                     mCapMobileProtector.removeTokenDevice(tokenName);
                     mMyLogger.updateLogMessage(mLogTextView, "Token: " + tokenName);
                 }
-                mCapTokenDevices.clear();
                 break;
+            }
         }
+
         mTokenSpinner.setAdapter(null);
     }
     //endregion
-
-
 }

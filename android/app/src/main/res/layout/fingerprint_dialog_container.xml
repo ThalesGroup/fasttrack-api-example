@@ -1,81 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="5dp">
+    android:orientation="vertical"
+    android:paddingTop="5dp"
+    tools:ignore="RtlSymmetry,HardcodedText">
 
     <TextView
-        android:paddingTop="15dp"
         android:id="@+id/fingerprint_title"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:paddingLeft="15dp"
-        android:textSize="18sp"
+        android:layout_height="wrap_content"
+        android:paddingStart="15dp"
+        android:paddingTop="15dp"
         android:textColor="@android:color/black"
-        android:textStyle="bold"
-        android:text="Generate OTP"/>
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <TextView
-        android:paddingTop="10dp"
-        android:layout_below="@id/fingerprint_title"
-        android:id="@+id/secondary_text"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:paddingLeft="15dp"
-        android:textSize="16sp"
-        android:textColor="@android:color/darker_gray"
-        android:text="Verify fingerprint to continue"/>
+        android:layout_height="wrap_content"
+        android:paddingStart="15dp"
+        android:paddingTop="10dp"
+        android:text="Verify fingerprint to continue"
+        android:textColor="@android:color/darker_gray" />
 
     <LinearLayout
-        android:id="@+id/fingerprint_icon_panel"
-        android:layout_below="@id/secondary_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
         android:orientation="horizontal"
         android:paddingLeft="15dp"
-        android:paddingRight="15dp"
         android:paddingTop="20dp"
-        android:layout_gravity="center_horizontal">
+        android:paddingRight="15dp">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingRight="20dp"
-            android:src="@drawable/ic_fp_40px"/>
+            android:paddingEnd="20dp"
+            android:src="@drawable/ic_fp_40px" />
 
         <TextView
-            android:paddingTop="10dp"
             android:id="@+id/fingerprint_prompt"
-            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:paddingLeft="15dp"
-            android:textSize="16sp"
+            android:layout_height="wrap_content"
+            android:paddingStart="15dp"
+            android:paddingTop="10dp"
+            android:text="Touch sensor"
             android:textColor="@android:color/black"
-            android:text="Touch sensor"/>
+            android:textSize="16sp" />
 
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/buttonPanel"
-        android:layout_below="@id/fingerprint_icon_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="bottom"
         android:orientation="horizontal"
         android:paddingLeft="15dp"
-        android:paddingRight="15dp"
         android:paddingTop="15dp"
-        android:paddingBottom="5dp"
-        android:gravity="bottom">
+        android:paddingRight="15dp"
+        android:paddingBottom="5dp">
 
         <Button
             android:id="@+id/cancel_button"
-            android:layout_weight="0.5"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:text="Cancel"
-            android:textColor="#117864"
-            android:background="@android:color/transparent"/>
+            android:layout_weight="0.5"
+            android:background="@android:color/transparent"
+            android:text="@android:string/cancel"
+            android:textColor="#117864" />
 
     </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>

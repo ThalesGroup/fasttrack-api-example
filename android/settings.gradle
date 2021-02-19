@@ -1,2 +1,2 @@
-include ':app'
-rootProject.name='FastTrack'
+include ":app"
+rootProject.name="FastTrack-Example"

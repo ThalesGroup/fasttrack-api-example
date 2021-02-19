@@ -1,4 +1,4 @@
-/**
+/*
  * ------------------------------------------------------------------------------
  *
  *     Copyright (c) 2019  GEMALTO DEVELOPMENT - R&D
@@ -25,14 +25,15 @@
  */
 package com.gemalto.idp.mobile.fasttrack.example.fragments;
 
+import android.app.Dialog;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-
-import androidx.fragment.app.DialogFragment;
 
 import com.gemalto.idp.mobile.fasttrack.example.R;
 
@@ -57,13 +58,21 @@ public class BioMetricFragment extends DialogFragment {
     @SuppressWarnings("InlinedApi")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setRetainInstance(true);
         setStyle(DialogFragment.STYLE_NORMAL, android.R.style.Theme_Material_Light_Dialog);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        getDialog().requestWindowFeature(STYLE_NO_TITLE);
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            ViewGroup container,
+            Bundle savedInstanceState
+    ) {
+        Dialog dlg = getDialog();
+        if (dlg != null)
+            dlg.requestWindowFeature(STYLE_NO_TITLE);
+
         setCancelable(false);
 
         View v = inflater.inflate(R.layout.fingerprint_dialog_container, container, false);
