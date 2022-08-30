@@ -14,8 +14,8 @@
 
 # There is an issue on R8 on GSON. Please refer to: https://r8.googlesource.com/r8/+/refs/heads/master/compatibility-faq.md
 # option 1
--keepclassmembers,allowobfuscation class util.a.y.** {
-  <fields>;
+-keepclassmembers class util.a.y.** {
+  !transient <fields>;
 }
 
 # option 2

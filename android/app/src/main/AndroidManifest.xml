@@ -19,7 +19,8 @@
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:label="@string/app_name"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustPan"
+            android:exported="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
