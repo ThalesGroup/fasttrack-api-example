@@ -3,15 +3,18 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		116C90CC28C5FBB90092BEFA /* EzioMobile.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E090F3B028BF5007004DBF6D /* EzioMobile.xcframework */; };
+		116C90CD28C5FBB90092BEFA /* EzioMobile.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E090F3B028BF5007004DBF6D /* EzioMobile.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		116C90CF28C5FBBB0092BEFA /* EzioMobileFastTrack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E090F3B428BF500E004DBF6D /* EzioMobileFastTrack.xcframework */; };
+		116C90D028C5FBBB0092BEFA /* EzioMobileFastTrack.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E090F3B428BF500E004DBF6D /* EzioMobileFastTrack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		96E5D0A12387B28400E9AB07 /* ProtectorConfigurations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9EDE0C0237E7226009D52BF /* ProtectorConfigurations.swift */; };
 		96EF4E362383904E007CC170 /* MessengerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96EF4E342383904E007CC170 /* MessengerViewController.swift */; };
 		96EF4E372383904E007CC170 /* MessengerConfigurations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96EF4E352383904E007CC170 /* MessengerConfigurations.swift */; };
 		96EF4E3923839058007CC170 /* MyLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96EF4E3823839058007CC170 /* MyLogger.swift */; };
-		C945EC08237E4BB600165FF7 /* EzioMobile.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C945EC07237E4BB600165FF7 /* EzioMobile.framework */; };
 		C945EC0A237E551C00165FF7 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C945EC09237E551C00165FF7 /* libc++.tbd */; };
 		C945EC0C237E5BA700165FF7 /* ProtectorExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = C945EC0B237E5BA700165FF7 /* ProtectorExample.swift */; };
 		C9514FF32373E8B1008A1C5C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9514FF22373E8B1008A1C5C /* AppDelegate.swift */; };
@@ -21,15 +24,28 @@
 		C99DF4CA237417B100EB18AD /* ProtectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C99DF4C9237417B100EB18AD /* ProtectorViewController.swift */; };
 		C9B5A76E2387BF1500953322 /* UIUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B5A76D2387BF1500953322 /* UIUtil.swift */; };
 		C9C4245B238269EB00248066 /* FastTrackExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C4245A238269EB00248066 /* FastTrackExample.swift */; };
-		C9EDE0C5237E9CE3009D52BF /* EzioMobileFastTrack.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9EDE0C4237E9CE3009D52BF /* EzioMobileFastTrack.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		116C90CE28C5FBB90092BEFA /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				116C90D028C5FBBB0092BEFA /* EzioMobileFastTrack.xcframework in Embed Frameworks */,
+				116C90CD28C5FBB90092BEFA /* EzioMobile.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		96EF4E342383904E007CC170 /* MessengerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessengerViewController.swift; sourceTree = "<group>"; };
 		96EF4E352383904E007CC170 /* MessengerConfigurations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessengerConfigurations.swift; sourceTree = "<group>"; };
 		96EF4E3823839058007CC170 /* MyLogger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyLogger.swift; sourceTree = "<group>"; };
 		C945EC02237E3F3F00165FF7 /* FastTrackExample-ObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FastTrackExample-ObjC.h"; sourceTree = "<group>"; };
-		C945EC07237E4BB600165FF7 /* EzioMobile.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EzioMobile.framework; path = ../../../../dist/ios/default/external/Debug/EzioMobile.framework; sourceTree = "<group>"; };
 		C945EC09237E551C00165FF7 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		C945EC0B237E5BA700165FF7 /* ProtectorExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProtectorExample.swift; path = FastTrackExample/Protector/ProtectorExample.swift; sourceTree = SOURCE_ROOT; };
 		C9514FEF2373E8B1008A1C5C /* FastTrackExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FastTrackExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -42,7 +58,8 @@
 		C9B5A76D2387BF1500953322 /* UIUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIUtil.swift; sourceTree = "<group>"; };
 		C9C4245A238269EB00248066 /* FastTrackExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastTrackExample.swift; sourceTree = "<group>"; };
 		C9EDE0C0237E7226009D52BF /* ProtectorConfigurations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProtectorConfigurations.swift; path = FastTrackExample/Protector/ProtectorConfigurations.swift; sourceTree = SOURCE_ROOT; };
-		C9EDE0C4237E9CE3009D52BF /* EzioMobileFastTrack.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EzioMobileFastTrack.framework; path = ../../../../dist/ios/fasttrack/Debug/EzioMobileFastTrack.framework; sourceTree = "<group>"; };
+		E090F3B028BF5007004DBF6D /* EzioMobile.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = EzioMobile.xcframework; path = ../../../../dist/ios/default/external/$CONFIGURATION/EzioMobile.xcframework; sourceTree = "<group>"; };
+		E090F3B428BF500E004DBF6D /* EzioMobileFastTrack.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = EzioMobileFastTrack.xcframework; path = ../../../../dist/ios/fasttrack/$CONFIGURATION/EzioMobileFastTrack.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,8 +68,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C945EC0A237E551C00165FF7 /* libc++.tbd in Frameworks */,
-				C945EC08237E4BB600165FF7 /* EzioMobile.framework in Frameworks */,
-				C9EDE0C5237E9CE3009D52BF /* EzioMobileFastTrack.framework in Frameworks */,
+				116C90CF28C5FBBB0092BEFA /* EzioMobileFastTrack.xcframework in Frameworks */,
+				116C90CC28C5FBB90092BEFA /* EzioMobile.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,9 +88,9 @@
 		C945EBFF237E3E9900165FF7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C9EDE0C4237E9CE3009D52BF /* EzioMobileFastTrack.framework */,
+				E090F3B428BF500E004DBF6D /* EzioMobileFastTrack.xcframework */,
+				E090F3B028BF5007004DBF6D /* EzioMobile.xcframework */,
 				C945EC09237E551C00165FF7 /* libc++.tbd */,
-				C945EC07237E4BB600165FF7 /* EzioMobile.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -133,6 +150,7 @@
 				C9514FEB2373E8B1008A1C5C /* Sources */,
 				C9514FEC2373E8B1008A1C5C /* Frameworks */,
 				C9514FED2373E8B1008A1C5C /* Resources */,
+				116C90CE28C5FBB90092BEFA /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -150,7 +168,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0940;
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1320;
 				ORGANIZATIONNAME = Thales;
 				TargetAttributes = {
 					C9514FEE2373E8B1008A1C5C = {
@@ -233,7 +251,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -256,6 +273,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -281,7 +299,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -294,7 +312,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -317,6 +334,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -336,10 +354,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -351,12 +370,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = LMY4YJ949Q;
 				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../../../dist/ios/fasttrack/$CONFIGURATION\"",
-					"\"$(SRCROOT)/../../../../dist/ios/default/external/$CONFIGURATION\"",
-				);
 				INFOPLIST_FILE = FastTrackExample/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				OTHER_LDFLAGS = "-fprofile-arcs";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gemalto.fasttrackexample.FastTrackExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -373,12 +392,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = LMY4YJ949Q;
 				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../../../dist/ios/fasttrack/$CONFIGURATION\"",
-					"\"$(SRCROOT)/../../../../dist/ios/default/external/$CONFIGURATION\"",
-				);
 				INFOPLIST_FILE = FastTrackExample/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				OTHER_LDFLAGS = "-fprofile-arcs";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gemalto.fasttrackexample.FastTrackExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
